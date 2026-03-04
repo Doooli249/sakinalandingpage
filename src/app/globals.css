@@ -1,26 +1,272 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --sakina-cream: #faf6f2;
+  --sakina-rose: #d9778a;
+  --sakina-charcoal: #1c1c1c;
+  --sakina-mauve: #c08497;
+  --sakina-champagne: #d4b483;
+
+  --background: 34 38% 97%;
+  --foreground: 0 0% 11%;
+  --card: 36 36% 95%;
+  --card-foreground: 0 0% 11%;
+  --popover: 36 36% 95%;
+  --popover-foreground: 0 0% 11%;
+  --primary: 347 56% 66%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 330 32% 91%;
+  --secondary-foreground: 0 0% 11%;
+  --muted: 330 25% 92%;
+  --muted-foreground: 0 0% 41%;
+  --accent: 347 56% 66%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 84% 53%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 335 20% 82%;
+  --input: 335 20% 82%;
+  --ring: 347 56% 66%;
+  --radius: 1rem;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+.dark {
+  --background: 0 0% 0%;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  min-height: 100%;
+  color: var(--sakina-charcoal);
+  background:
+    radial-gradient(circle at 15% 5%, rgba(192, 132, 151, 0.14), transparent 30%),
+    radial-gradient(circle at 90% 12%, rgba(217, 119, 138, 0.1), transparent 35%),
+    var(--sakina-cream);
+  font-family: var(--font-body), "Avenir Next", "Segoe UI", sans-serif;
+}
+
+.font-headline {
+  font-family: var(--font-headline), "Iowan Old Style", "Palatino Linotype", serif;
+}
+
+.font-signature {
+  font-family: var(--font-signature), "Bradley Hand", "Brush Script MT", cursive;
+}
+
+.section-shell {
+  position: relative;
+  overflow: clip;
+}
+
+.section-surface {
+  border: 1px solid color-mix(in srgb, var(--sakina-mauve) 35%, white);
+  background: color-mix(in srgb, var(--sakina-cream) 92%, white);
+  border-radius: 1.5rem;
+  box-shadow: 0 20px 60px rgba(28, 28, 28, 0.06);
+}
+
+.rose-glow {
+  box-shadow: 0 0 0 rgba(217, 119, 138, 0);
+  animation: rosePulse 2s ease-in-out infinite;
+}
+
+.warm-frame {
+  border: 1px solid color-mix(in srgb, var(--sakina-champagne) 80%, white);
+  background: linear-gradient(180deg, rgba(250, 246, 242, 0.92), rgba(250, 246, 242, 0.78));
+  box-shadow: 0 16px 40px rgba(28, 28, 28, 0.08);
+}
+
+.intro-overlay {
+  background: #000;
+  animation: bloomOpen 3.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.cta-pill {
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--sakina-rose) 62%, white);
+  background: linear-gradient(145deg, color-mix(in srgb, var(--sakina-rose) 96%, #fff), color-mix(in srgb, var(--sakina-mauve) 75%, #fff));
+  color: #fff;
+  font-weight: 600;
+  transition: transform 300ms ease, box-shadow 300ms ease, filter 300ms ease;
+}
+
+.cta-pill:hover {
+  transform: translateY(-1px) scale(1.01);
+  box-shadow: 0 16px 30px rgba(217, 119, 138, 0.28);
+  filter: saturate(1.04);
+}
+
+.cta-pill:focus-visible {
+  outline: 2px solid var(--sakina-charcoal);
+  outline-offset: 2px;
+}
+
+@keyframes rosePulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 rgba(217, 119, 138, 0);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(217, 119, 138, 0.3);
+  }
+}
+
+@keyframes bloomOpen {
+  0% {
+    opacity: 1;
+    clip-path: circle(0% at 50% 50%);
+  }
+  15% {
+    clip-path: circle(12% at 50% 50%);
+  }
+  75% {
+    opacity: 1;
+    clip-path: circle(130% at 50% 50%);
+  }
+  100% {
+    opacity: 0;
+    clip-path: circle(140% at 50% 50%);
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .intro-overlay {
+    display: none;
+  }
+}
+
+/* Demo styles for horizon component route only */
+.hero-container {
+  position: relative;
+  min-height: 200vh;
+  background: radial-gradient(circle at center, #0c1b2c 0%, #04070e 60%, #010204 100%);
+  color: white;
+  overflow: hidden;
+}
+
+.hero-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.hero-content {
+  position: fixed;
+  z-index: 10;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 2rem;
+}
+
+.hero-title {
+  font-size: clamp(2rem, 9vw, 7rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin: 0;
+}
+
+.hero-subtitle {
+  margin-top: 1rem;
+  max-width: 34rem;
+  opacity: 0.9;
+}
+
+.scroll-progress {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  width: min(460px, 90vw);
+}
+
+.progress-track {
+  margin-top: 0.5rem;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #7ed3ff, #c96cff);
+}
+
+.section-counter {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  opacity: 0.75;
+}
+
+.scroll-sections {
+  position: relative;
+  z-index: 1;
+  margin-top: 100vh;
+}
+
+.content-section {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  text-align: center;
+}
+
+.side-menu {
+  position: fixed;
+  z-index: 10;
+  left: 1rem;
+  top: 1rem;
+}
+
+.menu-icon span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: white;
+  margin-bottom: 4px;
+}
+
+.vertical-text {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.3em;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
 }
