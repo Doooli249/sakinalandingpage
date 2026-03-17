@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { isValidEmail } from "@/lib/utils";
+import { ShimmerButton } from "@/components/ui/shimmer-button";
 
 function useWaitlistCount() {
   const [count, setCount] = useState<number | null>(null);
@@ -101,13 +102,18 @@ export function HeroForm() {
           aria-label="Email address"
           className="h-12 min-w-0 flex-1 rounded-xl border border-mauve/28 bg-white/70 px-4 text-[14px] text-charcoal placeholder:text-charcoal/35 outline-none transition focus:border-rose/45 focus:ring-2 focus:ring-rose/18"
         />
-        <button
+        <ShimmerButton
           type="submit"
           disabled={isSubmitting}
-          className="cta-pill rose-glow h-12 whitespace-nowrap px-6 text-[14px] disabled:opacity-60"
+          className="h-12 border-none rounded-full px-8 text-[14px] disabled:opacity-60"
+          shimmerColor="#ffffff"
+          shimmerSize="0.1em"
+          background="linear-gradient(145deg, #d9778a, #c08497)"
         >
-          {isSubmitting ? "Saving…" : "Claim My Spot"}
-        </button>
+          <span className="relative z-10 whitespace-pre text-white tracking-wide font-medium">
+            {isSubmitting ? "Saving…" : "Claim My Spot"}
+          </span>
+        </ShimmerButton>
       </form>
 
       {error ? (

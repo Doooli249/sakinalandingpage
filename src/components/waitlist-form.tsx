@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { isValidEmail } from "@/lib/utils";
+import { ShimmerButton } from "@/components/ui/shimmer-button";
 
 function useWaitlistCount() {
   const [count, setCount] = useState<number | null>(null);
@@ -182,11 +183,16 @@ export function WaitlistForm() {
         />
       </div>
 
-      <button type="submit" disabled={isSubmitting}
-        className="cta-pill rose-glow h-12 w-full rounded-xl px-6 text-[14px] disabled:opacity-60"
+      <ShimmerButton type="submit" disabled={isSubmitting}
+        className="h-14 w-full rounded-2xl border-none disabled:opacity-60"
+        shimmerColor="#ffffff"
+        shimmerSize="0.1em"
+        background="linear-gradient(145deg, #d9778a, #c08497)"
       >
-        {isSubmitting ? "Saving your spot…" : "I'm Ready — Claim My Founding Spot"}
-      </button>
+        <span className="relative z-10 text-white tracking-wide font-medium">
+          {isSubmitting ? "Saving your spot…" : "I'm Ready — Claim My Founding Spot"}
+        </span>
+      </ShimmerButton>
 
       {error ? (
         <p className="text-[12px] text-red-500">{error}</p>
