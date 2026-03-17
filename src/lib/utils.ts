@@ -4,3 +4,7 @@ import { twMerge } from "tailwind-merge"
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
+
+export function isValidEmail(email: string): boolean {
+  return /^\S+@\S+\.\S+$/.test(email)
+}

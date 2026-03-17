@@ -2,752 +2,884 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { motion, useInView } from "framer-motion";
+import { motion, useInView, useMotionValue, useSpring } from "framer-motion";
 import { WaitlistForm } from "@/components/waitlist-form";
+import { HeroForm } from "@/components/hero-form";
+import { SakinaLogo } from "@/components/sakina-logo";
 
-function useCountUp(target: number, start: boolean, duration = 1600) {
+// ── Count-up ──────────────────────────────────────────────────────────────────
+
+function useCountUp(target: number, start: boolean, duration = 1800) {
   const [value, setValue] = useState(0);
-
   useEffect(() => {
     if (!start) return;
     let raf = 0;
     const t0 = performance.now();
-
     const tick = (now: number) => {
-      const progress = Math.min((now - t0) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setValue(target * eased);
-      if (progress < 1) {
-        raf = requestAnimationFrame(tick);
-      }
+      const p = Math.min((now - t0) / duration, 1);
+      setValue(target * (1 - Math.pow(1 - p, 3)));
+      if (p < 1) raf = requestAnimationFrame(tick);
     };
-
     raf = requestAnimationFrame(tick);
-
-    return () => {
-      cancelAnimationFrame(raf);
-    };
+    return () => cancelAnimationFrame(raf);
   }, [duration, start, target]);
-
   return value;
 }
 
-function CountOnView({
-  target,
-  formatter,
-  className,
-}: {
+function CountOnView({ target, formatter, className }: {
   target: number;
   formatter: (v: number) => string;
   className?: string;
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
-  const inView = useInView(ref, { once: true, margin: "-120px" });
-  const value = useCountUp(target, inView, 1600);
+  const inView = useInView(ref, { once: true, margin: "-100px" });
+  const value = useCountUp(target, inView, 1800);
+  return <div ref={ref} className={className}>{formatter(value)}</div>;
+}
+
+// ── Custom cursor dot (desktop pointer devices only) ──────────────────────────
+
+function CursorDot() {
+  const mouseX = useMotionValue(-100);
+  const mouseY = useMotionValue(-100);
+  const springX = useSpring(mouseX, { stiffness: 280, damping: 24 });
+  const springY = useSpring(mouseY, { stiffness: 280, damping: 24 });
+  const [visible, setVisible] = useState(false);
+  const [isPointer, setIsPointer] = useState(false);
+
+  useEffect(() => {
+    // Only activate on desktop pointer devices
+    if (!window.matchMedia("(pointer: fine) and (hover: hover)").matches) return;
+    setIsPointer(true);
+
+    const move = (e: MouseEvent) => {
+      mouseX.set(e.clientX - 5);
+      mouseY.set(e.clientY - 5);
+      setVisible(true);
+    };
+    const leave = () => setVisible(false);
+    window.addEventListener("mousemove", move, { passive: true });
+    window.addEventListener("mouseleave", leave);
+    return () => {
+      window.removeEventListener("mousemove", move);
+      window.removeEventListener("mouseleave", leave);
+    };
+  }, [mouseX, mouseY]);
+
+  if (!isPointer) return null;
 
   return (
-    <div ref={ref} className={className}>
-      {formatter(value)}
+    <motion.div
+      aria-hidden="true"
+      className="pointer-events-none fixed z-[9999] h-2.5 w-2.5 rounded-full bg-rose mix-blend-multiply"
+      style={{ left: springX, top: springY, opacity: visible ? 0.65 : 0 }}
+    />
+  );
+}
+
+// ── Sticky nav with IntersectionObserver for waitlist ────────────────────────
+
+function StickyNav() {
+  const [show, setShow] = useState(false);
+  const [waitlistInView, setWaitlistInView] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setShow(window.scrollY > 380);
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    const waitlistEl = document.getElementById("waitlist");
+    let observer: IntersectionObserver | null = null;
+    if (waitlistEl) {
+      observer = new IntersectionObserver(
+        ([entry]) => setWaitlistInView(entry.isIntersecting),
+        { threshold: 0.15 }
+      );
+      observer.observe(waitlistEl);
+    }
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      observer?.disconnect();
+    };
+  }, []);
+
+  return (
+    <nav
+      aria-label="Site navigation"
+      className={`sticky-nav ${show ? "sticky-nav-visible" : "sticky-nav-hidden"}`}
+    >
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
+        <div className="flex items-center gap-2.5">
+          <SakinaLogo size={26} />
+          <span className="font-headline text-lg font-medium tracking-[0.1em]">SAKINA</span>
+        </div>
+        {/* Hide CTA when the waitlist section is visible — user already sees the form */}
+        {!waitlistInView && (
+          <a href="#waitlist" className="cta-pill px-5 py-2 text-[13px]">
+            Claim Founding Spot
+          </a>
+        )}
+      </div>
+    </nav>
+  );
+}
+
+// ── Bank ticker with keyboard pause ──────────────────────────────────────────
+
+const TICKER_ITEMS = [
+  "Wells Fargo · $65B+ fossil fuel financing (2023)",
+  "JPMorgan Chase · $229B in fossil fuels since Paris Agreement",
+  "Bank of America · Private prison bond underwriting",
+  "Citigroup · Weapons manufacturer financing",
+  "Goldman Sachs · Predatory lending investments",
+  "US Banks (collective) · $3.8T in speculative derivatives",
+  "Wells Fargo · $65B+ fossil fuel financing (2023)",
+  "JPMorgan Chase · $229B in fossil fuels since Paris Agreement",
+  "Bank of America · Private prison bond underwriting",
+  "Citigroup · Weapons manufacturer financing",
+  "Goldman Sachs · Predatory lending investments",
+  "US Banks (collective) · $3.8T in speculative derivatives",
+];
+
+function BankTicker() {
+  const [paused, setPaused] = useState(false);
+
+  return (
+    <div className="border-t border-cream/8 pt-4">
+      <div className="mb-2 flex justify-end px-6">
+        <button
+          onClick={() => setPaused((p) => !p)}
+          aria-label={paused ? "Resume ticker" : "Pause ticker"}
+          className="text-[10px] uppercase tracking-[0.22em] text-cream/30 transition-colors hover:text-cream/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cream/50 focus-visible:outline-offset-2 rounded"
+        >
+          {paused ? "▶ Resume" : "⏸ Pause"}
+        </button>
+      </div>
+      <div className="marquee-outer">
+        <div
+          className={`marquee-track ${paused ? "marquee-paused" : ""}`}
+          aria-live="off"
+          aria-hidden="true"
+        >
+          {TICKER_ITEMS.map((item, i) => (
+            <span key={i} className="mx-8 whitespace-nowrap text-[11px] font-light tracking-[0.16em] text-cream/35 uppercase">
+              {item}
+            </span>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
 
-const problemColumns = [
-  {
-    icon: "💸",
-    title: "It gets lent out",
-    body: "Banks are legally permitted to lend out up to 97% of your deposit the moment it arrives. Your $1,000 becomes someone else’s loan. You earn nothing. They pocket the interest. You bear the risk.",
-  },
-  {
-    icon: "🛢️",
-    title: "It funds things you’d never choose",
-    body: "Major US banks have committed hundreds of billions to fossil fuels, weapons manufacturers, private prisons, and predatory lenders. Ordinary checking deposits help fund it.",
-  },
-  {
-    icon: "🎲",
-    title: "It gets leveraged",
-    body: "Derivatives. Securitized risk. Speculative positions. Banks can treat customer deposits as fuel for complexity while customers carry the uncertainty.",
-  },
+// ── Fade-up preset ────────────────────────────────────────────────────────────
+
+const fadeUp = (delay = 0) => ({
+  initial: { opacity: 0, y: 20 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: "-60px" },
+  transition: { duration: 0.65, ease: "easeOut" as const, delay },
+});
+
+// ── Data ──────────────────────────────────────────────────────────────────────
+
+const problemItems = [
+  { num: "01", title: "It gets lent out",
+    body: "Banks are legally permitted to lend up to 97% of your deposit the moment it arrives. Your $1,000 becomes someone else's loan. You earn nothing. They pocket the interest. You carry the risk." },
+  { num: "02", title: "It funds things you'd never choose",
+    body: "Major US banks have committed hundreds of billions to fossil fuels, weapons manufacturers, private prisons, and predatory lenders — funded by ordinary checking deposits like yours." },
+  { num: "03", title: "It gets leveraged",
+    body: "Derivatives. Securitized risk. Speculative positions. Banks use customer deposits as fuel for complexity while customers carry the uncertainty." },
 ];
 
 const features = [
-  {
-    icon: "🔐",
-    title: "Your money stays put. Always.",
-    body: "Your funds are held in a legally-segregated, FDIC-insured account at our partner bank. Never loaned. Never collateralized. Never moved without your consent.",
-  },
-  {
-    icon: "💳",
-    title: "A real Visa debit card. Accepted everywhere.",
-    body: "Tap to pay, shop online, and use ATMs globally. It works like your current bank card, except your deposited money remains yours in full.",
-  },
-  {
-    icon: "💰",
-    title: "Rewards that do not cost your values.",
-    body: "Get 1-3% cashback on everyday purchases, with extra rewards at ethical and independent merchants.",
-  },
-  {
-    icon: "📡",
-    title: "Proof of Reserves. Live. Public.",
-    body: "Every day Sakina shows that total user deposits equal total safeguarded funds. 1:1, with independent monthly verification.",
-  },
+  { num: "I",   title: "Your money stays put. Always.",
+    body: "Held in a legally-segregated, FDIC-insured custodial account. Never loaned. Never collateralized. Never moved without your consent. Contractually enforced, not just promised." },
+  { num: "II",  title: "A real Visa debit card. Everywhere.",
+    body: "Tap to pay, shop online, use ATMs worldwide. Works like your current bank card — except your deposited money remains entirely yours." },
+  { num: "III", title: "Rewards that don't cost your values.",
+    body: "1–3% cashback on everyday purchases. Bonus rewards at ethical and B-Corp merchants. Optional crypto cashback in Bitcoin, Ethereum, or stablecoin." },
+  { num: "IV",  title: "Proof of Reserves. Live. Public.",
+    body: "Every day, Sakina shows total user deposits equal total safeguarded funds — 1:1, with independent monthly verification. No other US neobank does this." },
+];
+
+const comparison = [
+  { label: "Your deposit",                  traditional: "Lent out — up to 97%",          sakina: "Held in full. Always." },
+  { label: "What it funds",                 traditional: "Fossil fuels, weapons, prisons", sakina: "Nothing. Zero." },
+  { label: "Reserve ratio",                 traditional: "3–10% (fractional reserve)",     sakina: "1:1 (full reserve)" },
+  { label: "Proof of reserves",             traditional: "None. Trust us.",                sakina: "Daily, public, verified" },
+  { label: "Your explicit consent required",traditional: "No",                             sakina: "Always" },
+  { label: "FDIC insured",                  traditional: "Yes",                            sakina: "Yes, via partner bank" },
 ];
 
 const personas = [
-  {
-    icon: "🕌",
-    label: "For the faith-conscious",
-    quote:
-      "I wanted an American account that honors faith and conscience as legal structure, not as marketing copy.",
-  },
-  {
-    icon: "🌱",
-    label: "For the environmentally aware",
-    quote:
-      "I changed my lifestyle years ago. Sakina lets my money change with it.",
-  },
-  {
-    icon: "👾",
-    label: "For the crypto-native",
-    quote:
-      "I need fiat for daily life, but I want custody clarity that feels like self-respect.",
-  },
-  {
-    icon: "✊",
-    label: "For the socially conscious",
-    quote:
-      "I knew there was a mismatch between my values and my bank. Sakina finally closes that gap.",
-  },
-  {
-    icon: "🎓",
-    label: "For the first-time banker",
-    quote:
-      "If this is my first account, I want it built on a promise I understand.",
-  },
-  {
-    icon: "👁️",
-    label: "For anyone paying attention",
-    quote: "I just want to know my money is still there. All of it. All the time.",
-  },
+  { label: "For the faith-conscious",
+    quote: "I wanted an American account that honors faith and conscience as legal structure — not as marketing copy." },
+  { label: "For the environmentally aware",
+    quote: "I changed my lifestyle years ago. Sakina lets my money change with it." },
+  { label: "For anyone paying attention",
+    quote: "I just want to know my money is still there. All of it. All the time." },
 ];
 
 const howSteps = [
+  { n: "01", title: "Join the waitlist today",
+    body: "Add your name and email. No credit check, no SSN, no commitment." },
+  { n: "02", title: "Get early access at launch",
+    body: "Founding members get in first with permanent launch benefits locked in." },
+  { n: "03", title: "Deposit. Get your card. Breathe.",
+    body: "Virtual card same day, physical card in five business days. Safeguards from the first dollar." },
+];
+
+const faqs = [
   {
-    number: 1,
-    title: "Join the waitlist today",
-    body: "Add your name and email. No credit check, no SSN, no commitment.",
+    q: "How does Sakina make money if you don't lend deposits?",
+    a: "We earn interchange revenue — a small fee paid by merchants every time you use your Sakina debit card. This is how Apple Card and other modern cards work. We have no financial incentive to touch your deposits.",
   },
   {
-    number: 2,
-    title: "Get early access when we launch",
-    body: "Founding members get in first with permanent launch benefits.",
+    q: "Is my money actually FDIC-insured?",
+    a: "Yes. Deposits are held in a custodial FBO (For Benefit Of) account at an FDIC-insured partner bank, insured up to $250,000 per depositor. The FDIC guarantee is identical to a traditional bank — the difference is what happens to your money between transactions.",
   },
   {
-    number: 3,
-    title: "Deposit, get your card, find your peace",
-    body: "Virtual card same day, physical card in five business days, safeguards from first dollar.",
+    q: "Is Sakina only for Muslims?",
+    a: "No. Sakina is for anyone who wants their money to stay exactly where they put it. Our launch community is Muslim Americans, because Sakina's structure aligns naturally with Islamic finance principles — but the account is for everyone with values.",
+  },
+  {
+    q: "When does Sakina launch?",
+    a: "We're targeting a 2026 launch. Founding members get first access and will lock in permanent benefits from the moment they sign up.",
+  },
+  {
+    q: "What do I actually get as a founding member?",
+    a: "A limited-edition founding member Visa card, permanently higher cashback rates, zero monthly fees for life, first access at launch, and a direct line to the founding team.",
   },
 ];
 
-const stats = [
-  {
-    display: "$17.9T",
-    target: 17.9,
-    formatter: (v: number) => `$${v.toFixed(1)}T`,
-    label: "Total US bank deposits not sitting still in a vault.",
-  },
-  {
-    display: "73%",
-    target: 73,
-    formatter: (v: number) => `${Math.round(v)}%`,
-    label: "Americans who want values-aligned money behavior.",
-  },
-  {
-    display: "$0",
-    target: 0,
-    formatter: () => "$0",
-    label: "Amount Sakina lends from your personal deposit.",
-  },
-  {
-    display: "1:1",
-    target: 1,
-    formatter: () => "1:1",
-    label: "Your deposit and safeguarded funds. Always matched.",
-  },
+const founderBenefits = [
+  "Limited-edition founding member Visa card",
+  "Higher cashback rates, permanently locked",
+  "Zero monthly fees for life",
+  "First access at launch",
+  "Direct line to the founding team",
 ];
+
+// ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function HomePage() {
-  const heroTagWords = ["TRANQUILITY", "FOR", "YOUR", "MONEY"];
+  const today = new Date().toLocaleDateString("en-US", {
+    month: "long", day: "numeric", year: "numeric",
+  });
+
+  // Only show the intro overlay once per visitor (skip on return visits)
+  const [showIntro, setShowIntro] = useState(false);
+  useEffect(() => {
+    if (!localStorage.getItem("sakina_intro_seen")) {
+      setShowIntro(true);
+      localStorage.setItem("sakina_intro_seen", "1");
+    }
+  }, []);
 
   return (
     <main className="section-shell bg-cream text-charcoal">
-      <div className="intro-overlay pointer-events-none fixed inset-0 z-50 flex flex-col items-center justify-center text-white">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.92 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.7 }}
-          className="font-headline text-6xl tracking-[0.14em] md:text-8xl"
-        >
-          SAKINA
-        </motion.div>
-        <motion.div
-          initial="hidden"
-          animate="show"
-          variants={{
-            hidden: {},
-            show: {
-              transition: {
-                staggerChildren: 0.18,
-                delayChildren: 0.8,
-              },
-            },
-          }}
-          className="mt-4 flex flex-wrap justify-center gap-2 text-xs tracking-[0.22em] text-white/80"
-        >
-          {heroTagWords.map((word) => (
-            <motion.span
-              key={word}
-              variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }}
-              className="rounded-full border border-white/35 px-3 py-1"
-            >
-              {word}
-            </motion.span>
-          ))}
-        </motion.div>
-      </div>
+      {/* Skip to content — visible on keyboard focus */}
+      <a href="#hero" className="skip-link">Skip to content</a>
 
-      <section id="hero" className="relative px-6 pb-16 pt-8 md:pb-24 md:pt-10">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_8%_18%,rgba(217,119,138,0.2),transparent_34%)]" />
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_15%,rgba(192,132,151,0.16),transparent_28%)]" />
+      <CursorDot />
+      <StickyNav />
+
+      {/* ── Intro overlay — logo blooms first, text follows ──────────────── */}
+      {showIntro && (
+        <div
+          className="intro-overlay pointer-events-none fixed inset-0 z-50 flex flex-col items-center justify-center"
+          aria-hidden="true"
+        >
+          {/* Geometric flower blooms open immediately */}
+          <SakinaLogo size={128} bloom delay={0} />
+
+          {/* Brand name follows after the logo finishes drawing */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.75, ease: "easeOut", delay: 0.85 }}
+            className="font-headline mt-6 text-[clamp(2.8rem,10vw,6rem)] font-light tracking-[0.22em] text-white"
+          >
+            SAKINA
+          </motion.div>
+
+          <motion.p
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 1.15 }}
+            className="font-headline mt-1 text-[clamp(0.95rem,2.5vw,1.4rem)] font-light italic tracking-[0.1em] text-white/50"
+            dir="rtl" lang="ar"
+          >
+            سكينة
+          </motion.p>
+
+          <motion.p
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 1.5 }}
+            className="mt-5 text-[10px] tracking-[0.35em] text-white/32 uppercase"
+          >
+            Tranquility for your money
+          </motion.p>
+        </div>
+      )}
+
+      {/* ── Hero ─────────────────────────────────────────────────────────── */}
+      <section id="hero" className="relative px-6 pb-20 pt-8 md:pb-28 md:pt-10">
+        <div className="geo-pattern pointer-events-none absolute inset-0" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_10%_20%,rgba(217,119,138,0.13),transparent_45%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_88%_10%,rgba(192,132,151,0.09),transparent_40%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-cream/70" />
+
+        {/* Arabic watermark */}
+        <div
+          aria-hidden="true"
+          className="font-headline pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 select-none text-[clamp(8rem,22vw,18rem)] font-light leading-none text-charcoal/[0.03] md:right-10 [writing-mode:vertical-rl]"
+          dir="rtl" lang="ar"
+        >
+          سكينة
+        </div>
 
         <div className="relative mx-auto max-w-6xl">
-          <header className="mb-9 flex items-center justify-between rounded-full border border-mauve/30 bg-white/50 px-4 py-2 backdrop-blur">
+          {/* Nav */}
+          <header className="mb-12 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Image
-                src="/assets/flower-logo.jpeg"
-                alt="Sakina flower logo"
-                width={32}
-                height={32}
-                className="h-8 w-8 rounded-full border border-charcoal/10 bg-white object-cover"
-              />
+              <SakinaLogo size={34} />
               <div>
-                <p className="font-headline text-xl tracking-[0.1em]">SAKINA</p>
-                <p className="-mt-1 text-[11px] uppercase tracking-[0.18em] text-charcoal/60">
-                  Tranquility for your money
+                <p className="font-headline text-xl font-medium tracking-[0.12em]">SAKINA</p>
+                <p className="-mt-0.5 text-[10px] uppercase tracking-[0.22em] text-charcoal/55"
+                  lang="ar" dir="rtl">
+                  <span dir="ltr">سكينة · Tranquility</span>
                 </p>
               </div>
             </div>
-            <a href="#waitlist" className="cta-pill px-4 py-2 text-sm">
+            <a href="#waitlist" className="cta-pill px-5 py-2 text-sm">
               Reserve founding access
             </a>
           </header>
 
-          <div className="grid gap-10 md:grid-cols-[1.02fr_0.98fr] md:items-center">
+          <div className="grid gap-10 md:grid-cols-[1.1fr_0.9fr] md:items-start">
             <div>
-              <motion.p
-                initial={{ opacity: 0, y: 18 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.55, delay: 0.25 }}
-                className="mb-4 inline-flex rounded-full border border-rose/35 bg-white/70 px-3 py-1 text-xs font-medium tracking-[0.16em] text-charcoal/70"
+              <motion.span {...fadeUp(0.1)}
+                className="mb-5 inline-flex items-center gap-2 rounded-full border border-rose/28 bg-white/55 px-3.5 py-1.5 text-[11px] font-medium uppercase tracking-[0.18em] text-charcoal/65"
               >
-                TRANQUILITY FOR YOUR MONEY
+                <span className="h-1.5 w-1.5 rounded-full bg-rose" />
+                Pre-launch waitlist open
+              </motion.span>
+
+              {/* Product type anchor */}
+              <motion.p {...fadeUp(0.13)}
+                className="mb-4 text-[11px] uppercase tracking-[0.22em] text-charcoal/45"
+              >
+                US Checking Account · Visa Debit Card · Full-Reserve Banking
               </motion.p>
-              <motion.h1
-                initial={{ opacity: 0, y: 22 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.7, delay: 0.3 }}
-                className="font-headline text-5xl leading-[0.98] text-charcoal md:text-7xl"
+
+              {/* Mixed-weight headline */}
+              <motion.h1 {...fadeUp(0.18)}
+                className="font-headline text-[clamp(2.8rem,6vw,5.4rem)] leading-[1.04] text-charcoal"
               >
-                Your money should be exactly where you left it.
+                <span className="font-light">Your money </span>
+                <em className="font-light italic text-charcoal/65">should be </em>
+                <span className="font-light">exactly where </span>
+                <em className="font-light italic text-charcoal/65">you left it.</em>
               </motion.h1>
 
-              <motion.p
-                initial={{ opacity: 0, y: 18 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.65, delay: 0.45 }}
-                className="mt-5 whitespace-pre-line text-lg leading-relaxed text-charcoal/75"
+              <motion.p {...fadeUp(0.3)}
+                className="mt-6 max-w-lg text-[15px] leading-[1.75] text-charcoal/65"
               >
-                {"Not loaned to a corporation.\nNot invested in industries you oppose.\nNot leveraged, gambled, or quietly misused.\nJust yours. Completely. Always."}
+                Not loaned to a corporation. Not invested in industries you oppose.
+                Not leveraged, gambled, or quietly misused.
+                Just yours — completely, legally, always.
               </motion.p>
 
-              <motion.p
-                initial={{ opacity: 0, y: 14 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.65, delay: 0.58 }}
-                className="mt-6 max-w-2xl text-base leading-relaxed text-charcoal/75"
+              <motion.p {...fadeUp(0.4)}
+                className="mt-4 max-w-lg text-[15px] leading-[1.75] text-charcoal/65"
               >
-                Sakina is a US checking experience built on one legally-enforced promise: your deposits are never touched, never lent, and never moved without your consent. You get a real Visa card, real rewards, and real calm.
+                Sakina is a US checking account built on one legally-enforced promise:
+                your deposits are never touched without your consent. Real Visa card.
+                Real rewards. Real calm.
               </motion.p>
 
-              <motion.div
-                initial={{ opacity: 0, y: 12 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.55, delay: 0.72 }}
-                className="mt-8"
-              >
-                <a href="#waitlist" className="cta-pill rose-glow inline-flex px-7 py-3 text-base">
-                  Join the Waitlist - Free Forever
-                </a>
-                <p className="mt-3 text-sm text-charcoal/65">
-                  Science class version: no mystery chemistry, no hidden reactions. Just your money staying stable.
+              <motion.div {...fadeUp(0.52)} className="mt-9">
+                <HeroForm />
+              </motion.div>
+
+              <motion.div {...fadeUp(0.62)} className="mt-10 flex items-center gap-5">
+                <hr className="champagne-rule flex-1" />
+                <p className="text-[11px] uppercase tracking-[0.2em] text-charcoal/50">
+                  1:1 reserve · FDIC-insured · No monthly fees
                 </p>
+                <hr className="champagne-rule flex-1" />
               </motion.div>
             </div>
 
+            {/* Hero image — priority load */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, rotate: -1 }}
+              initial={{ opacity: 0, scale: 0.96, rotate: -0.5 }}
               whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.75 }}
-              className="relative"
+              transition={{ duration: 0.85, ease: "easeOut" }}
+              className="relative mt-4 md:mt-0"
             >
-              <div className="warm-frame rotate-[-2deg] rounded-[1.65rem] p-3">
+              <div className="warm-frame rotate-[-1.5deg] rounded-[1.75rem] p-3 shadow-2xl">
                 <Image
                   src="/assets/bank-photo-voitkevich.jpg"
-                  alt="Person using payment card"
-                  width={1200}
-                  height={1500}
-                  className="h-[520px] w-full rounded-2xl object-cover"
+                  alt="Person using Sakina debit card at a payment terminal"
+                  width={1200} height={1500}
+                  priority
+                  className="h-[500px] w-full rounded-2xl object-cover md:h-[560px]"
                 />
               </div>
-              <div className="warm-frame absolute -bottom-8 -left-6 hidden w-44 rotate-6 p-2 md:block">
-                <Image
-                  src="/assets/flower-logo.jpeg"
-                  alt="Sakina flower mark"
-                  width={320}
-                  height={320}
-                  className="rounded-xl object-cover"
-                />
+              {/* Decorative logo card — floats beside hero image */}
+              <motion.div
+                initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }} transition={{ delay: 0.4, duration: 0.6 }}
+                className="warm-frame absolute -bottom-6 -left-5 hidden items-center justify-center rounded-2xl p-5 md:flex"
+              >
+                <SakinaLogo size={88} />
+              </motion.div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Problem — dark + angled ───────────────────────────────────────── */}
+      <section id="problem" className="section-dark-angled relative px-6 pb-4 pt-20 md:pt-28">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,rgba(217,119,138,0.07),transparent_55%)]" />
+
+        <div className="relative mx-auto max-w-6xl">
+          <div className="text-center">
+            <CountOnView
+              target={17.9}
+              formatter={(v) => `$${v.toFixed(1)}T`}
+              className="stat-display text-[clamp(4.5rem,14vw,10rem)] text-cream/90"
+            />
+            <motion.p {...fadeUp(0.1)}
+              className="mt-3 text-sm font-light uppercase tracking-[0.24em] text-rose"
+            >
+              None of this is sitting in your account right now.
+            </motion.p>
+          </div>
+
+          <motion.h2 {...fadeUp(0.15)}
+            className="font-headline mx-auto mt-14 max-w-3xl text-center text-[clamp(1.8rem,4vw,3.2rem)] font-light leading-tight text-cream"
+          >
+            Here is what happens the moment you deposit money at a traditional bank.
+          </motion.h2>
+
+          <div className="mt-12 grid gap-6 md:grid-cols-3">
+            {problemItems.map((item, idx) => (
+              <motion.article key={item.title} {...fadeUp(idx * 0.1 + 0.2)}
+                className="rounded-2xl border border-cream/8 p-6 transition-colors duration-300 hover:border-rose/22"
+              >
+                <p className="font-headline text-[10px] tracking-[0.3em] text-rose/75 uppercase">{item.num}</p>
+                <h3 className="mt-3 font-headline text-xl font-light text-cream">{item.title}</h3>
+                <p className="mt-3 text-[14px] leading-[1.8] text-cream/60">{item.body}</p>
+              </motion.article>
+            ))}
+          </div>
+
+          <motion.div {...fadeUp(0.5)} className="mt-16 text-center">
+            <p className="text-[15px] text-cream/65">You never agreed to this.</p>
+            <p className="mt-1 text-[15px] text-cream/65">You were just never given a choice.</p>
+            <p className="font-headline mt-5 text-[clamp(1.6rem,3.5vw,2.4rem)] font-light italic text-rose">
+              Sakina is the choice.
+            </p>
+            <div className="mt-8 flex justify-center">
+              <a href="#waitlist" className="cta-pill-dark inline-flex px-7 py-3 text-sm">
+                Reserve your founding spot
+              </a>
+            </div>
+          </motion.div>
+        </div>
+
+        <div className="mt-16">
+          <BankTicker />
+        </div>
+      </section>
+
+      {/* ── Solution ─────────────────────────────────────────────────────── */}
+      <section id="solution" className="px-6 py-20 md:py-28">
+        <div className="mx-auto max-w-6xl">
+          <motion.div {...fadeUp(0)}>
+            <p className="text-[11px] font-medium uppercase tracking-[0.26em] text-rose/80">
+              What Sakina actually is
+            </p>
+            <h2 className="font-headline mt-3 text-[clamp(2rem,5vw,3.8rem)] font-light leading-tight text-charcoal">
+              Banking that keeps its promise.
+            </h2>
+            <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-charcoal/65">
+              Sakina means tranquility in Arabic. Every feature below is one expression of that word.
+            </p>
+          </motion.div>
+
+          <div className="mt-14 grid gap-8 md:grid-cols-[1.1fr_0.9fr]">
+            <div className="space-y-8">
+              {features.map((f, idx) => (
+                <motion.article key={f.title} {...fadeUp(idx * 0.1 + 0.1)} className="editorial-card">
+                  <p className="font-headline text-[10px] tracking-[0.3em] text-rose/70 uppercase">{f.num}</p>
+                  <h3 className="mt-1.5 font-headline text-xl font-medium text-charcoal">{f.title}</h3>
+                  <p className="mt-2 text-[14px] leading-[1.8] text-charcoal/65">{f.body}</p>
+                </motion.article>
+              ))}
+            </div>
+
+            <motion.div {...fadeUp(0.2)} className="grid gap-4">
+              <div className="warm-frame rounded-2xl p-2">
+                <Image src="/assets/bank-photo-gabby-k.jpg" alt="Person tapping card at payment terminal"
+                  width={1200} height={760} loading="lazy"
+                  className="h-[200px] w-full rounded-xl object-cover" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="warm-frame rounded-2xl p-2">
+                  <Image src="/assets/pink-money-1.jpg" alt="Cash and banking imagery"
+                    width={900} height={1200} loading="lazy"
+                    className="h-[200px] w-full rounded-xl object-cover" />
+                </div>
+                <div className="warm-frame rounded-2xl p-2">
+                  <Image src="/assets/bank-pink-photo.jpg" alt="Phone and debit card on pink background"
+                    width={900} height={1200} loading="lazy"
+                    className="h-[200px] w-full rounded-xl object-cover" />
+                </div>
               </div>
             </motion.div>
           </div>
         </div>
       </section>
 
-      <section id="problem" className="px-6 py-18 md:py-24">
+      {/* ── Proof ────────────────────────────────────────────────────────── */}
+      <section id="proof" className="bg-[#fdf9f6] px-6 py-20 md:py-28">
         <div className="mx-auto max-w-6xl">
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 0.7 }}
-            className="section-surface p-7 md:p-10"
+          <motion.h2 {...fadeUp(0)}
+            className="font-headline mx-auto max-w-3xl text-center text-[clamp(1.8rem,4vw,3.2rem)] font-light leading-tight text-charcoal"
           >
-            <div className="text-center">
-              <CountOnView
-                target={17900000000000}
-                formatter={(v) =>
-                  `$${Math.round(v).toLocaleString("en-US", {
-                    maximumFractionDigits: 0,
-                  })}`
-                }
-                className="font-headline text-3xl text-charcoal md:text-6xl"
-              />
-              <motion.p
-                initial={{ opacity: 0, scaleX: 0.8 }}
-                whileInView={{ opacity: 1, scaleX: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: 0.15 }}
-                className="mx-auto mt-3 max-w-fit border-t-2 border-rose/80 pt-2 text-sm font-medium uppercase tracking-[0.15em] text-rose"
-              >
-                None of this is sitting in your account right now.
-              </motion.p>
-            </div>
-
-            <h2 className="font-headline mx-auto mt-8 max-w-3xl text-center text-3xl leading-tight md:text-5xl">
-              Here is what happens the moment you deposit money at a traditional bank.
-            </h2>
-
-            <div className="mt-8 grid gap-4 md:grid-cols-3">
-              {problemColumns.map((item, idx) => (
-                <motion.article
-                  key={item.title}
-                  initial={{ opacity: 0, y: 14 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.45, delay: idx * 0.12 }}
-                  className="rounded-2xl border border-mauve/35 bg-white/60 p-5"
-                >
-                  <p className="text-2xl">{item.icon}</p>
-                  <h3 className="mt-2 text-xl font-semibold text-charcoal">{item.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-charcoal/75">{item.body}</p>
-                </motion.article>
-              ))}
-            </div>
-
-            <div className="mt-7 text-center leading-relaxed">
-              <p className="text-lg text-charcoal/85">You never agreed to this.</p>
-              <p className="text-lg text-charcoal/85">You were just never given a choice.</p>
-              <p className="font-headline text-3xl text-rose">Sakina is the choice.</p>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      <section id="solution" className="px-6 py-16 md:py-20">
-        <div className="mx-auto max-w-6xl">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.97 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.65 }}
-            className="section-surface relative p-7 md:p-10"
+            We do not ask for your trust.
+            <span className="block italic text-rose/85"> We earn it every single day.</span>
+          </motion.h2>
+          <motion.p {...fadeUp(0.1)}
+            className="mx-auto mt-5 max-w-2xl text-center text-[15px] leading-relaxed text-charcoal/62"
           >
-            <div className="pointer-events-none absolute inset-0 -z-0 bg-[radial-gradient(circle_at_center,rgba(217,119,138,0.15),transparent_42%)]" />
-            <p className="text-xs font-semibold tracking-[0.2em] text-rose">WHAT SAKINA ACTUALLY IS</p>
-            <h2 className="font-headline mt-2 text-4xl md:text-5xl">Banking that keeps its promise.</h2>
-            <p className="mt-3 max-w-3xl text-charcoal/75">
-              Sakina means tranquility in Arabic. Every feature below is one expression of that word.
-            </p>
+            Most banks ask you to trust without visibility. Sakina shows the reserve relationship publicly — so you can verify, not guess.
+          </motion.p>
 
-            <div className="mt-8 grid gap-4 md:grid-cols-[1.1fr_0.9fr]">
-              <div className="grid gap-4 sm:grid-cols-2">
-                {features.map((feature, idx) => (
-                  <motion.article
-                    key={feature.title}
-                    initial={{ opacity: 0, y: 15 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.45, delay: idx * 0.1 }}
-                    className="rounded-2xl border border-mauve/30 bg-white/70 p-5"
-                  >
-                    <p className="text-2xl">{feature.icon}</p>
-                    <h3 className="mt-2 text-lg font-semibold">{feature.title}</h3>
-                    <p className="mt-2 text-sm text-charcoal/75">{feature.body}</p>
-                  </motion.article>
-                ))}
-              </div>
-
-              <div className="grid gap-4">
-                <div className="warm-frame rounded-2xl p-2">
-                  <Image
-                    src="/assets/bank-photo-gabby-k.jpg"
-                    alt="Card reader and debit card"
-                    width={1200}
-                    height={760}
-                    className="h-[210px] w-full rounded-xl object-cover"
-                  />
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="warm-frame rounded-2xl p-2">
-                    <Image
-                      src="/assets/pink-money-1.jpg"
-                      alt="Bank and money visual"
-                      width={900}
-                      height={1200}
-                      className="h-[220px] w-full rounded-xl object-cover"
-                    />
-                  </div>
-                  <div className="warm-frame rounded-2xl p-2">
-                    <Image
-                      src="/assets/bank-pink-photo.jpg"
-                      alt="Phone and card on pink background"
-                      width={900}
-                      height={1200}
-                      className="h-[220px] w-full rounded-xl object-cover"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      <section id="proof" className="px-6 py-16 md:py-20">
-        <div className="mx-auto max-w-6xl">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.65 }}
-            className="section-surface p-7 md:p-10"
-          >
-            <h2 className="font-headline text-center text-4xl leading-tight md:text-5xl">
-              We do not ask for your trust. We earn it every single day.
-            </h2>
-            <p className="mx-auto mt-4 max-w-3xl text-center text-charcoal/75">
-              Most banks ask you to trust without visibility. Sakina shows the reserve relationship in real time so you can verify, not guess.
-            </p>
-
-            <div className="mt-10 grid gap-6 md:grid-cols-[1.1fr_0.9fr] md:items-center">
-              <div className="rounded-2xl border border-mauve/35 bg-white/70 p-6">
-                <div className="relative h-32">
-                  <div className="absolute left-4 right-4 top-16 h-1 rounded bg-charcoal/25" />
-                  <motion.div
-                    initial={{ x: -26, opacity: 0 }}
-                    whileInView={{ x: 0, opacity: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.6 }}
-                    className="absolute left-2 top-4 rounded-xl border border-rose/35 bg-cream px-4 py-2 text-sm font-semibold"
-                  >
-                    Your deposit
-                  </motion.div>
-                  <motion.div
-                    initial={{ x: 26, opacity: 0 }}
-                    whileInView={{ x: 0, opacity: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.6 }}
-                    className="absolute right-2 top-4 rounded-xl border border-rose/35 bg-cream px-4 py-2 text-sm font-semibold"
-                  >
-                    Sakina safeguarded funds
-                  </motion.div>
-                </div>
-                <p className="font-headline text-center text-4xl text-rose">1:1. Every day. Verified.</p>
-                <p className="mt-2 text-center text-sm text-charcoal/70">
-                  Ask your current bank to show you the same thing. We will be here when they cannot.
+          <div className="mt-16 grid gap-10 md:grid-cols-[1.2fr_0.8fr] md:items-center">
+            <motion.div {...fadeUp(0.15)} className="section-surface p-8 md:p-10 text-center">
+              <CountOnView target={1} formatter={() => "1:1"}
+                className="stat-display text-[clamp(4rem,12vw,8rem)] text-charcoal" />
+              <div className="mt-3 flex items-center justify-center gap-2">
+                <span className="pulse-dot" aria-hidden="true" />
+                <p className="text-[11px] uppercase tracking-[0.2em] text-charcoal/55 font-medium">
+                  <time dateTime={new Date().toISOString().split("T")[0]}>
+                    Last verified: {today}
+                  </time>
                 </p>
               </div>
 
-              <div className="warm-frame rounded-2xl p-2">
-                <Image
-                  src="/assets/google-gemini-bank-lock.png"
-                  alt="Bank lock visual"
-                  width={920}
-                  height={1300}
-                  className="h-[300px] w-full rounded-xl object-cover"
-                />
+              <div className="mt-8 grid grid-cols-2 gap-4 text-left">
+                <motion.div
+                  initial={{ opacity: 0, x: -14 }} whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.2 }}
+                  className="rounded-xl border border-rose/18 bg-rose/5 p-4"
+                >
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-charcoal/55">Your deposit</p>
+                  <p className="font-headline mt-1 text-2xl font-medium text-charcoal">$5,000</p>
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, x: 14 }} whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.2 }}
+                  className="rounded-xl border border-rose/18 bg-rose/5 p-4"
+                >
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-charcoal/55">Safeguarded</p>
+                  <p className="font-headline mt-1 text-2xl font-medium text-rose">$5,000</p>
+                </motion.div>
               </div>
-            </div>
+              <p className="mt-6 text-[13px] leading-relaxed text-charcoal/50">
+                Ask your current bank to show you the same thing.
+                <br />We will be here when they cannot.
+              </p>
+            </motion.div>
+
+            <motion.div {...fadeUp(0.25)} className="warm-frame rounded-2xl p-2">
+              <Image src="/assets/google-gemini-bank-lock.png" alt="Bank security lock illustration"
+                width={920} height={1300} loading="lazy"
+                className="h-[380px] w-full rounded-xl object-cover" />
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Comparison — semantic table ───────────────────────────────────── */}
+      <section id="comparison" className="px-6 py-20 md:py-28">
+        <div className="mx-auto max-w-5xl">
+          <motion.div {...fadeUp(0)}>
+            <p className="text-[11px] font-medium uppercase tracking-[0.26em] text-rose/80">
+              The honest comparison
+            </p>
+            <h2 className="font-headline mt-3 text-[clamp(1.8rem,4vw,3.2rem)] font-light leading-tight text-charcoal">
+              Your bank vs. Sakina.
+              <span className="block italic text-charcoal/50"> Side by side.</span>
+            </h2>
+          </motion.div>
+
+          <motion.div {...fadeUp(0.1)} className="mt-12 overflow-hidden rounded-2xl border border-mauve/18">
+            <table className="w-full border-collapse text-left">
+              <thead>
+                <tr className="bg-charcoal">
+                  <th scope="col" className="px-6 py-4 text-[11px] font-medium uppercase tracking-[0.2em] text-cream/50 w-1/3">
+                    Feature
+                  </th>
+                  <th scope="col" className="px-6 py-4 text-center text-[11px] font-medium uppercase tracking-[0.2em] text-cream/50 w-1/3">
+                    Traditional Bank
+                  </th>
+                  <th scope="col" className="px-6 py-4 text-center text-[11px] font-medium uppercase tracking-[0.2em] text-rose/80 w-1/3">
+                    Sakina
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {comparison.map((row, idx) => (
+                  <motion.tr
+                    key={row.label}
+                    {...fadeUp(idx * 0.06 + 0.15)}
+                    className={`border-b border-mauve/10 last:border-b-0 ${idx % 2 === 0 ? "bg-white/60" : "bg-cream/60"}`}
+                  >
+                    <td className="px-6 py-4 text-[13px] font-medium text-charcoal/75">{row.label}</td>
+                    <td className="px-6 py-4 text-center text-[13px] leading-snug text-rose/75">{row.traditional}</td>
+                    <td className="px-6 py-4 text-center text-[13px] font-medium leading-snug text-emerald-600">{row.sakina}</td>
+                  </motion.tr>
+                ))}
+              </tbody>
+            </table>
+          </motion.div>
+
+          <motion.div {...fadeUp(0.5)} className="mt-10 flex justify-center">
+            <a href="#waitlist" className="cta-pill inline-flex px-8 py-3.5 text-[15px]">
+              Open my Sakina account
+            </a>
           </motion.div>
         </div>
       </section>
 
-      <section id="personas" className="px-6 py-16 md:py-20">
-        <div className="mx-auto max-w-6xl">
-          <h2 className="font-headline text-center text-4xl md:text-5xl">
-            Sakina is for anyone who has ever wondered -
-            <span className="mt-1 block text-rose">&quot;What is my bank actually doing with my money?&quot;</span>
-          </h2>
+      {/* ── Personas — editorial, not card grid ──────────────────────────── */}
+      <section id="personas" className="bg-[#fdf9f6] px-6 py-20 md:py-28">
+        <div className="mx-auto max-w-5xl">
+          <motion.div {...fadeUp(0)} className="max-w-3xl">
+            <p className="text-[11px] uppercase tracking-[0.26em] text-charcoal/50 font-medium">
+              Who this is for
+            </p>
+            <h2 className="font-headline mt-3 text-[clamp(1.8rem,4vw,3.2rem)] font-light leading-tight text-charcoal">
+              Sakina is not for everyone.
+              <span className="block italic text-charcoal/50"> It is for people who have started asking questions.</span>
+            </h2>
+          </motion.div>
 
-          <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {/* Editorial pull-quote layout — alternating columns, no cards */}
+          <div className="mt-16 divide-y divide-champagne/40">
             {personas.map((persona, idx) => (
               <motion.article
                 key={persona.label}
-                initial={{ opacity: 0, y: 18, rotate: -1 }}
-                whileInView={{ opacity: 1, y: 0, rotate: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.42, delay: idx * 0.08 }}
-                className="rounded-2xl border border-mauve/30 bg-white/70 p-5"
+                {...fadeUp(idx * 0.07 + 0.1)}
+                className={`grid gap-6 py-10 md:grid-cols-[3fr_2fr] md:items-center ${idx % 2 === 1 ? "md:[direction:rtl]" : ""}`}
               >
-                <p className="text-2xl">{persona.icon}</p>
-                <h3 className="mt-2 text-lg font-semibold">{persona.label}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-charcoal/75">{persona.quote}</p>
+                <blockquote
+                  className={`font-headline text-[clamp(1.25rem,2.8vw,1.85rem)] font-light italic leading-snug text-charcoal/78 ${idx % 2 === 1 ? "md:[direction:ltr]" : ""}`}
+                >
+                  &ldquo;{persona.quote}&rdquo;
+                </blockquote>
+                <p
+                  className={`text-[11px] font-medium uppercase tracking-[0.26em] text-rose/75 ${idx % 2 === 1 ? "md:[direction:ltr] md:text-right" : ""}`}
+                >
+                  {persona.label}
+                </p>
               </motion.article>
             ))}
           </div>
 
-          <div className="mt-10 flex flex-col items-center gap-4 text-center">
-            <p className="font-headline text-3xl">If any of those sounded like you - welcome home.</p>
-            <a href="#waitlist" className="cta-pill inline-flex px-6 py-3 text-base">
+          <motion.div {...fadeUp(0.6)} className="mt-14 flex flex-col items-center gap-5 text-center">
+            <p className="font-headline text-[clamp(1.4rem,3vw,2rem)] font-light text-charcoal">
+              If any of those sounded like you — welcome home.
+            </p>
+            <a href="#waitlist" className="cta-pill inline-flex px-7 py-3 text-sm">
               Claim your spot on the waitlist
             </a>
-          </div>
-        </div>
-      </section>
-
-      <section id="how_it_works" className="px-6 py-16 md:py-20">
-        <div className="mx-auto max-w-6xl">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.62 }}
-            className="section-surface p-7 md:p-10"
-          >
-            <h2 className="font-headline text-4xl md:text-5xl">Three steps to banking that finally makes sense.</h2>
-
-            <div className="relative mt-8 space-y-8">
-              <motion.div
-                initial={{ scaleY: 0 }}
-                whileInView={{ scaleY: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.7 }}
-                className="absolute left-4 top-3 h-[calc(100%-28px)] w-px origin-top bg-rose/55"
-              />
-              {howSteps.map((step, idx) => (
-                <motion.article
-                  key={step.number}
-                  initial={{ opacity: 0, x: -10 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.4, delay: idx * 0.12 }}
-                  className="relative pl-12"
-                >
-                  <div className="absolute left-0 top-0 flex h-8 w-8 items-center justify-center rounded-full border border-rose bg-rose text-sm font-semibold text-white">
-                    {step.number}
-                  </div>
-                  <h3 className="text-xl font-semibold">{step.title}</h3>
-                  <p className="mt-1 text-sm text-charcoal/75">{step.body}</p>
-                </motion.article>
-              ))}
-            </div>
           </motion.div>
         </div>
       </section>
 
-      <section id="stats" className="px-6 py-16 md:py-20">
-        <div className="mx-auto max-w-6xl">
-          <h2 className="font-headline text-center text-4xl md:text-5xl">
-            The problem is not small.
-            <span className="block">Neither is our answer.</span>
-          </h2>
+      {/* ── How It Works ─────────────────────────────────────────────────── */}
+      <section id="how_it_works" className="px-6 py-20 md:py-28">
+        <div className="mx-auto max-w-4xl">
+          <motion.div {...fadeUp(0)}>
+            <p className="text-[11px] uppercase tracking-[0.26em] text-charcoal/50 font-medium">How it works</p>
+            <h2 className="font-headline mt-3 text-[clamp(1.8rem,4vw,3.2rem)] font-light leading-tight text-charcoal">
+              Three steps to banking that finally makes sense.
+            </h2>
+          </motion.div>
 
-          <div className="mt-10 grid gap-4 sm:grid-cols-2">
-            {stats.map((stat, idx) => (
-              <motion.article
-                key={stat.display}
-                initial={{ opacity: 0, y: 14 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: idx * 0.1 }}
-                className="rounded-2xl border border-mauve/35 bg-white/70 p-6"
-              >
-                <CountOnView
-                  target={stat.target}
-                  formatter={stat.formatter}
-                  className="font-headline text-4xl text-charcoal md:text-5xl"
-                />
-                <p className="mt-2 text-sm text-charcoal/75">{stat.label}</p>
+          <div className="relative mt-14 space-y-12">
+            <motion.div
+              initial={{ scaleY: 0 }} whileInView={{ scaleY: 1 }}
+              viewport={{ once: true }} transition={{ duration: 0.8, ease: "easeOut" }}
+              className="absolute left-5 top-2 h-[calc(100%-40px)] w-px origin-top bg-rose/28"
+            />
+            {howSteps.map((step, idx) => (
+              <motion.article key={step.n} {...fadeUp(idx * 0.14 + 0.1)} className="relative pl-14">
+                <div className="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-full border border-rose/35 bg-cream">
+                  <span className="font-headline text-xs font-medium tracking-[0.1em] text-rose">{step.n}</span>
+                </div>
+                <h3 className="font-headline text-xl font-medium text-charcoal">{step.title}</h3>
+                <p className="mt-1.5 text-[14px] leading-relaxed text-charcoal/62">{step.body}</p>
               </motion.article>
             ))}
           </div>
         </div>
       </section>
 
-      <section id="founder" className="px-6 py-16 md:py-20">
-        <div className="mx-auto max-w-5xl">
-          <motion.div
-            initial={{ opacity: 0, y: 22 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.62 }}
-            className="rounded-3xl border border-champagne/60 bg-[#fff8f3] p-8 md:p-12"
+      {/* ── Founder note ─────────────────────────────────────────────────── */}
+      <section id="founder" className="px-6 py-20 md:py-28">
+        <div className="mx-auto max-w-4xl">
+          <motion.div {...fadeUp(0)}
+            className="rounded-3xl border border-champagne/45 bg-[#fffaf5] p-10 md:p-14"
           >
-            <h2 className="font-headline text-4xl md:text-5xl">Why I built this.</h2>
-            <div className="mt-6 space-y-4 text-[15px] leading-7 text-charcoal/80 md:text-base">
-              <p>
-                My name is Adil. I am 24 years old. I am Sudanese. I am Muslim. I grew up watching my community navigate a financial system that was not built for them.
+            <p className="text-[11px] uppercase tracking-[0.26em] text-charcoal/45 font-medium">From the founder</p>
+            <h2 className="font-headline mt-4 text-[clamp(2rem,5vw,3.4rem)] font-light text-charcoal">
+              Why I built this.
+            </h2>
+            <hr className="champagne-rule mt-8 mb-8" />
+
+            <div className="space-y-5 text-[15px] leading-[1.85] text-charcoal/70">
+              <p className="drop-cap">
+                My name is Adil. I am 24. I am Sudanese. I am Muslim. I grew up watching my community navigate a financial system that was not built for them.
               </p>
               <p>
-                For years I watched people keep money in cash and informal networks, not because they were unsophisticated, but because mainstream options came with quiet compromises that faith and conscience could not accept.
+                For years I watched people keep money in cash and informal networks — not because they were unsophisticated, but because every mainstream option came with a quiet ethical compromise their faith and conscience could not accept.
               </p>
               <p>
-                This is bigger than one community. It is the story of anyone who has ever deposited a paycheck and wondered what their bank is doing with it.
+                This is bigger than one community. It is the story of anyone who has ever deposited a paycheck and wondered: what is my bank actually doing with my money?
               </p>
               <p>
-                Sakina is the Arabic word for tranquility, the stillness that comes from knowing something precious is safe and undisturbed.
+                Sakina is the Arabic word for tranquility — the stillness that comes from knowing something precious is completely safe and undisturbed.
               </p>
               <p>
-                We are building from Colorado with everything we have: not just a bank account, but a promise backed by law and verified by evidence.
+                We are building from Colorado with everything we have. Not just a bank account — a promise backed by law and verified by evidence.
               </p>
             </div>
-            <p className="font-signature mt-8 text-4xl text-charcoal">- Adil, Co-Founder, Sakina</p>
+
+            <p className="font-signature mt-10 text-4xl text-charcoal/75">— Adil, Co-Founder</p>
           </motion.div>
         </div>
       </section>
 
-      <section id="waitlist" className="px-6 pb-20 pt-12 md:pb-24">
+      {/* ── Waitlist ─────────────────────────────────────────────────────── */}
+      <section id="waitlist" className="bg-[#fdf9f6] px-6 pb-24 pt-16 md:pb-32">
         <div className="mx-auto max-w-6xl">
-          <div className="grid gap-6 md:grid-cols-[1.05fr_0.95fr] md:items-start">
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.58 }}
-              className="section-surface p-7 md:p-9"
-            >
-              <h2 className="font-headline text-4xl md:text-5xl">Your money deserves to rest.</h2>
-              <p className="mt-3 text-charcoal/75">
-                Founding members receive better cashback, zero monthly fees for life, and first launch access.
+          <div className="grid gap-10 md:grid-cols-[1.1fr_0.9fr] md:items-start">
+            <motion.div {...fadeUp(0)} className="section-surface p-8 md:p-10">
+              <p className="text-[11px] uppercase tracking-[0.26em] text-rose/80 font-medium">Founding membership</p>
+              <h2 className="font-headline mt-3 text-[clamp(1.8rem,4vw,3rem)] font-light leading-tight text-charcoal">
+                Your money deserves to rest.
+              </h2>
+              <p className="mt-4 text-[15px] leading-relaxed text-charcoal/65">
+                Founding spots are limited. Early members lock in permanent benefits the moment they sign up.
               </p>
-              <p className="mt-4 text-sm leading-relaxed text-charcoal/70">
-                Bill Nye version: when systems are stable, everything behaves better. Let us put your money in a stable system.
-              </p>
-
-              <ul className="mt-6 space-y-2 text-sm text-charcoal/75">
-                <li>• Founding member Visa card, limited edition</li>
-                <li>• Higher cashback rates, locked in permanently</li>
-                <li>• Zero monthly fees, for life</li>
-                <li>• First access at launch</li>
-                <li>• Direct access to the founding team</li>
+              <ul className="mt-7 space-y-3">
+                {founderBenefits.map((b) => (
+                  <li key={b} className="flex items-start gap-3 text-[14px] text-charcoal/68">
+                    <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-rose/65" aria-hidden="true" />
+                    {b}
+                  </li>
+                ))}
               </ul>
-
-              <div className="mt-8">
+              <div className="mt-9">
                 <WaitlistForm />
               </div>
             </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, scale: 0.96 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.62 }}
-              className="grid gap-4"
-            >
+            <motion.div {...fadeUp(0.15)} className="grid gap-5">
               <div className="warm-frame rounded-2xl p-2">
-                <Image
-                  src="/assets/pink-money-2.jpg"
-                  alt="Pink wallet and cash"
-                  width={1200}
-                  height={760}
-                  className="h-[250px] w-full rounded-xl object-cover"
-                />
+                <Image src="/assets/pink-money-2.jpg" alt="Pink wallet and cash — representing financial freedom"
+                  width={1200} height={760} loading="lazy"
+                  className="h-[260px] w-full rounded-xl object-cover" />
               </div>
               <div className="warm-frame rounded-2xl p-2">
-                <Image
-                  src="/assets/bank-photo-gabby-k.jpg"
-                  alt="Person tapping payment terminal"
-                  width={1200}
-                  height={760}
-                  className="h-[230px] w-full rounded-xl object-cover"
-                />
+                <Image src="/assets/bank-photo-gabby-k.jpg" alt="Person using a payment card with confidence"
+                  width={1200} height={760} loading="lazy"
+                  className="h-[240px] w-full rounded-xl object-cover" />
               </div>
             </motion.div>
           </div>
         </div>
       </section>
 
-      <footer id="footer" className="border-t border-mauve/35 px-6 py-10">
-        <div className="mx-auto flex max-w-6xl flex-col gap-6 md:flex-row md:items-start md:justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <Image
-                src="/assets/flower-logo.jpeg"
-                alt="Sakina flower logo"
-                width={22}
-                height={22}
-                className="h-5 w-5 rounded-full border border-charcoal/15"
-              />
-              <span className="font-headline text-2xl tracking-[0.08em]">SAKINA</span>
-            </div>
-            <p className="mt-1 text-sm text-charcoal/75">Tranquility for your money.</p>
-            <p className="mt-2 text-xs text-charcoal/65">© 2026 Sakina Financial Inc. All Rights Reserved</p>
+      {/* ── FAQ ──────────────────────────────────────────────────────────── */}
+      <section id="faq" className="px-6 py-20 md:py-28">
+        <div className="mx-auto max-w-3xl">
+          <motion.div {...fadeUp(0)}>
+            <p className="text-[11px] font-medium uppercase tracking-[0.26em] text-charcoal/50">Common questions</p>
+            <h2 className="font-headline mt-3 text-[clamp(1.8rem,4vw,3.2rem)] font-light leading-tight text-charcoal">
+              Things you should know before you sign up.
+            </h2>
+          </motion.div>
+
+          <div className="mt-12">
+            {faqs.map((faq, idx) => (
+              <motion.div key={faq.q} {...fadeUp(idx * 0.07 + 0.1)}>
+                <details className="group border-b border-mauve/18 py-5 last:border-b-0">
+                  <summary className="flex cursor-pointer list-none items-start justify-between gap-4 text-[15px] font-medium text-charcoal [&::-webkit-details-marker]:hidden">
+                    {faq.q}
+                    <span className="mt-0.5 flex-shrink-0 text-xl leading-none text-rose/70 transition-transform duration-200 group-open:rotate-45" aria-hidden="true">
+                      +
+                    </span>
+                  </summary>
+                  <p className="mt-4 text-[14px] leading-[1.8] text-charcoal/62">{faq.a}</p>
+                </details>
+              </motion.div>
+            ))}
           </div>
 
-          <div className="text-sm text-charcoal/75">
-            <p>hello@sakina.io</p>
-            <div className="mt-2 flex gap-4">
-              <a href="#" className="hover:text-rose">
-                Privacy Policy
-              </a>
-              <a href="#" className="hover:text-rose">
-                Terms of Service
-              </a>
-              <a href="#" className="hover:text-rose">
-                Contact
-              </a>
-            </div>
-          </div>
+          <motion.div {...fadeUp(0.5)} className="mt-12 text-center">
+            <p className="text-[14px] text-charcoal/55">Still have questions?</p>
+            <a href="mailto:hello@sakina.io" className="mt-1.5 inline-block text-[14px] text-rose transition-colors hover:underline">
+              Email us at hello@sakina.io →
+            </a>
+          </motion.div>
         </div>
-        <p className="mx-auto mt-6 max-w-6xl text-xs leading-relaxed text-charcoal/65">
-          Sakina is a financial technology company, not a bank. Deposit accounts are FDIC-insured through our partner bank. Currently in pre-launch.
-        </p>
+      </section>
+
+      {/* ── Footer ───────────────────────────────────────────────────────── */}
+      <footer id="footer" className="border-t border-mauve/18 px-6 py-12">
+        <div className="mx-auto max-w-6xl">
+          <motion.p {...fadeUp(0)}
+            className="font-headline mb-10 text-center text-[clamp(1.2rem,3vw,1.9rem)] font-light italic text-charcoal/55"
+          >
+            &ldquo;Every dollar you deposit with Sakina is a dollar that stays yours.&rdquo;
+          </motion.p>
+          <hr className="champagne-rule mb-10" />
+
+          <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
+            <div>
+              <div className="flex items-center gap-2.5">
+                <SakinaLogo size={22} />
+                <span className="font-headline text-2xl font-light tracking-[0.1em]">SAKINA</span>
+              </div>
+              <p className="mt-1.5 text-[13px] text-charcoal/55">Tranquility for your money.</p>
+              <p className="mt-1 text-[12px] text-charcoal/45">© 2026 Sakina Financial Inc. All rights reserved.</p>
+            </div>
+
+            <nav aria-label="Footer navigation" className="text-[13px] text-charcoal/60">
+              <a href="mailto:hello@sakina.io" className="block hover:text-rose transition-colors">
+                hello@sakina.io
+              </a>
+              <div className="mt-2.5 flex gap-5">
+                <a href="/privacy" className="hover:text-rose transition-colors">Privacy Policy</a>
+                <a href="/terms" className="hover:text-rose transition-colors">Terms of Service</a>
+                <a href="mailto:hello@sakina.io" className="hover:text-rose transition-colors">Contact</a>
+              </div>
+            </nav>
+          </div>
+
+          <p className="mt-8 border-t border-mauve/12 pt-6 text-[11px] leading-relaxed text-charcoal/45">
+            Sakina is a financial technology company, not a bank. Banking services provided through FDIC-insured partner banks. Deposit accounts insured up to $250,000 per depositor. Currently in pre-launch. Not available in all states.
+          </p>
+        </div>
       </footer>
     </main>
   );
