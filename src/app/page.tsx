@@ -325,42 +325,42 @@ function IntroScreen({ onUnlock }: { onUnlock: () => void }) {
       
       <div className="relative z-10 w-full max-w-4xl text-center flex flex-col items-center">
         <motion.p
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.6 }}
-          className="text-rose text-[11px] font-medium tracking-[0.25em] uppercase mb-4"
+          initial={{ opacity: 0, scale: 1.1 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+          className="text-rose text-[11px] font-bold tracking-[0.3em] uppercase mb-2"
         >
           The quiet reality
         </motion.p>
         
         <motion.div
-           initial={{ opacity: 0, scale: 0.95 }}
-           animate={{ opacity: 1, scale: 1 }}
-           transition={{ delay: 0.8, duration: 1 }}
-           className="h-[140px] md:h-[180px] flex items-center justify-center w-full mb-8 relative"
+           initial={{ opacity: 0, scale: 0.95, y: 10 }}
+           animate={{ opacity: 1, scale: 1, y: 0 }}
+           transition={{ duration: 0.5, ease: "easeOut" }}
+           className="h-[140px] md:h-[180px] flex items-center justify-center w-full mb-4 relative"
         >
            <GooeyText 
              texts={[
-               "Your bank is cheating on you.",
-               "With fossil fuels.",
-               "With weapons manufacturers.",
-               "Using your own money.",
-               "Take your power back."
+               "Your bank is using you.",
+               "Funding fossil fuels.",
+               "Funding war.",
+               "With your money.",
+               "Stop funding what you oppose."
              ]} 
-             morphTime={1.6} 
-             cooldownTime={1.8} 
-             className="font-headline text-[clamp(2.5rem,6vw,5.5rem)] font-bold text-charcoal text-center leading-[1.1] tracking-tight"
+             morphTime={1.2} 
+             cooldownTime={1.4} 
+             className="font-headline text-[clamp(2.8rem,7vw,6.5rem)] font-bold text-charcoal text-center leading-[1.05] tracking-tight"
            />
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 3.5, duration: 1 }}
-          className="mt-6 flex flex-col items-center gap-4 cursor-pointer"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6, duration: 0.5, ease: "easeOut" }}
+          className="mt-2 flex flex-col items-center gap-4 cursor-pointer"
           onClick={onUnlock}
         >
-          <p className="text-[11px] uppercase font-bold tracking-[0.3em] text-charcoal/40 pt-10">
+          <p className="text-[12px] uppercase font-bold tracking-[0.3em] text-charcoal/50 pt-10">
             Swipe up to end it
           </p>
           <motion.div
