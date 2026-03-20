@@ -39,19 +39,6 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Custom cursor — desktop pointer devices only */
-@media (pointer: fine) and (hover: hover) {
-  html,
-  html a,
-  html button,
-  html input,
-  html textarea,
-  html select,
-  html [role="button"] {
-    cursor: none;
-  }
-}
-
 body {
   margin: 0;
   min-height: 100%;
@@ -131,8 +118,13 @@ body {
 }
 
 .editorial-card {
-  border-left: 2px solid var(--sakina-rose);
+  border-left: 2px solid color-mix(in srgb, var(--sakina-rose) 40%, transparent);
   padding-left: 1.25rem;
+  transition: border-color 0.35s ease;
+}
+
+.editorial-card:hover {
+  border-left-color: var(--sakina-rose);
 }
 
 .warm-frame {
@@ -185,6 +177,13 @@ body {
   filter: saturate(1.06);
 }
 
+.cta-pill:active {
+  transform: translateY(1px);
+  box-shadow: 0 4px 12px rgba(217, 119, 138, 0.22);
+  filter: saturate(1);
+  transition-duration: 80ms;
+}
+
 .cta-pill:focus-visible {
   outline: 2px solid var(--sakina-charcoal);
   outline-offset: 3px;
@@ -203,6 +202,12 @@ body {
 .cta-pill-dark:hover {
   transform: translateY(-1px);
   box-shadow: 0 10px 24px rgba(250, 246, 242, 0.15);
+}
+
+.cta-pill-dark:active {
+  transform: translateY(1px);
+  box-shadow: 0 3px 8px rgba(250, 246, 242, 0.08);
+  transition-duration: 80ms;
 }
 
 /* rose-glow: fires twice then rests — not infinite */

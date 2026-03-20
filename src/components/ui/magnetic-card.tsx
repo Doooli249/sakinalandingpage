@@ -79,8 +79,8 @@ export function MagneticCard() {
         
         {/* The Card Surface */}
         <div className="absolute inset-0 z-10 rounded-3xl overflow-hidden border-[0.5px] border-black/5 shadow-2xl bg-[#F8F5F0]">
-           {/* Card physical texture grain */}
-           <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/cream-paper.png")' }} />
+           {/* Card physical texture — CSS noise instead of external image */}
+           <div className="absolute inset-0 opacity-[0.025] pointer-events-none" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")", backgroundSize: "180px 180px" }} />
            
            <div className="absolute inset-0 p-8 flex items-center justify-between">
               {/* EMV Chip */}

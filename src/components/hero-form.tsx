@@ -1,16 +1,18 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { isValidEmail } from "@/lib/utils";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
 
 function useWaitlistCount() {
   const [count, setCount] = useState<number | null>(null);
   useEffect(() => {
-    fetch("/api/waitlist")
+    const controller = new AbortController();
+    fetch("/api/waitlist", { signal: controller.signal })
       .then((r) => r.json())
       .then((d: { count?: number }) => setCount(d.count ?? null))
-      .catch(() => setCount(null));
+      .catch(() => {});
+    return () => controller.abort();
   }, []);
   return count;
 }
@@ -22,21 +24,40 @@ export function HeroForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const count = useWaitlistCount();
+  const abortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    return () => abortRef.current?.abort();
+  }, []);
 
   const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const normalized = email.trim().toLowerCase();
+    if (isSubmitting) return;
+
+    const trimmedName = firstName.trim().slice(0, 100);
+    const normalized = email.trim().toLowerCase().slice(0, 254);
+
+    if (!trimmedName) {
+      setError("Please enter your first name.");
+      return;
+    }
     if (!isValidEmail(normalized)) {
       setError("Please enter a valid email address.");
       return;
     }
+
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     try {
       setIsSubmitting(true);
       setError("");
       const response = await fetch("/api/waitlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ first_name: firstName.trim(), email: normalized }),
+        body: JSON.stringify({ first_name: trimmedName, email: normalized }),
+        signal: controller.signal,
       });
       if (!response.ok) {
         const data = (await response.json()) as { error?: string };
@@ -44,7 +65,8 @@ export function HeroForm() {
         return;
       }
       setSubmitted(true);
-    } catch {
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
       setError("We couldn't submit right now. Please try again.");
     } finally {
       setIsSubmitting(false);
@@ -91,6 +113,8 @@ export function HeroForm() {
           onChange={(e) => setFirstName(e.target.value)}
           placeholder="First name"
           aria-label="First name"
+          maxLength={100}
+          autoComplete="given-name"
           className="h-12 min-w-0 flex-1 rounded-xl border border-mauve/28 bg-white/70 px-4 text-[14px] text-charcoal placeholder:text-charcoal/35 outline-none transition focus:border-rose/45 focus:ring-2 focus:ring-rose/18"
         />
         <input
@@ -100,6 +124,8 @@ export function HeroForm() {
           onChange={(e) => setEmail(e.target.value)}
           placeholder="Email address"
           aria-label="Email address"
+          maxLength={254}
+          autoComplete="email"
           className="h-12 min-w-0 flex-1 rounded-xl border border-mauve/28 bg-white/70 px-4 text-[14px] text-charcoal placeholder:text-charcoal/35 outline-none transition focus:border-rose/45 focus:ring-2 focus:ring-rose/18"
         />
         <ShimmerButton
@@ -117,7 +143,7 @@ export function HeroForm() {
       </form>
 
       {error ? (
-        <p className="text-[12px] text-red-500">{error}</p>
+        <p role="alert" className="text-[12px] text-red-500">{error}</p>
       ) : (
         <p className="text-[11px] text-charcoal/42">Free forever · No credit check · Launch updates only</p>
       )}

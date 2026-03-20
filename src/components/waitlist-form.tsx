@@ -1,16 +1,45 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import { isValidEmail } from "@/lib/utils";
-import { ShimmerButton } from "@/components/ui/shimmer-button";
+
+// Animated checkmark — draws on mount
+function AnimatedCheck() {
+  const shouldReduce = useReducedMotion();
+  return (
+    <motion.svg
+      width="22"
+      height="22"
+      viewBox="0 0 22 22"
+      fill="none"
+      initial={shouldReduce ? { opacity: 1 } : { opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.35, ease: "easeOut" }}
+    >
+      <motion.path
+        d="M4 11l5.5 5.5L18 6"
+        stroke="#D9778A"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        initial={shouldReduce ? { pathLength: 1 } : { pathLength: 0 }}
+        animate={{ pathLength: 1 }}
+        transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
+      />
+    </motion.svg>
+  );
+}
 
 function useWaitlistCount() {
   const [count, setCount] = useState<number | null>(null);
   useEffect(() => {
-    fetch("/api/waitlist")
+    const controller = new AbortController();
+    fetch("/api/waitlist", { signal: controller.signal })
       .then((r) => r.json())
       .then((d: { count?: number }) => setCount(d.count ?? null))
-      .catch(() => setCount(null));
+      .catch(() => {});
+    return () => controller.abort();
   }, []);
   return count;
 }
@@ -24,14 +53,32 @@ export function WaitlistForm() {
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
   const count = useWaitlistCount();
+  const abortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    return () => abortRef.current?.abort();
+  }, []);
 
   const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const normalized = email.trim().toLowerCase();
+    if (isSubmitting) return;
+
+    const trimmedName = firstName.trim().slice(0, 100);
+    const normalized = email.trim().toLowerCase().slice(0, 254);
+    const trimmedMotivation = motivation.trim().slice(0, 1000);
+
+    if (!trimmedName) {
+      setError("Please enter your first name.");
+      return;
+    }
     if (!isValidEmail(normalized)) {
       setError("Please enter a valid email address.");
       return;
     }
+
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
 
     try {
       setIsSubmitting(true);
@@ -40,10 +87,11 @@ export function WaitlistForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          first_name: firstName.trim(),
+          first_name: trimmedName,
           email: normalized,
-          motivation: motivation.trim(),
+          motivation: trimmedMotivation,
         }),
+        signal: controller.signal,
       });
 
       if (!response.ok) {
@@ -53,7 +101,8 @@ export function WaitlistForm() {
       }
 
       setSubmitted(true);
-    } catch {
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
       setError("We couldn't submit right now. Please try again.");
     } finally {
       setIsSubmitting(false);
@@ -85,18 +134,38 @@ export function WaitlistForm() {
 
   if (submitted) {
     return (
-      <div className="space-y-5">
+      <motion.div
+        className="space-y-5"
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+      >
         {/* Success card */}
         <div className="rounded-2xl border border-rose/22 bg-rose/5 p-7 text-center">
-          <div className="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-full border border-rose/28 bg-cream">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-              <path d="M3 9l4.5 4.5L15 5" stroke="#D9778A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
-          <p className="font-headline text-2xl font-light text-charcoal">You&rsquo;re on the list.</p>
-          <p className="mt-2 text-[14px] leading-relaxed text-charcoal/55">
+          <motion.div
+            className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full border border-rose/28 bg-cream"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20, delay: 0.1 }}
+          >
+            <AnimatedCheck />
+          </motion.div>
+          <motion.p
+            className="font-headline text-2xl font-light text-charcoal"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+          >
+            You&rsquo;re on the list.
+          </motion.p>
+          <motion.p
+            className="mt-2 text-[14px] leading-relaxed text-charcoal/55"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.55 }}
+          >
             Founding member spot reserved. We&rsquo;ll send launch updates when the time comes.
-          </p>
+          </motion.p>
         </div>
 
         {/* Share prompt */}
@@ -128,7 +197,7 @@ export function WaitlistForm() {
             )}
           </button>
         </div>
-      </div>
+      </motion.div>
     );
   }
 
@@ -153,6 +222,7 @@ export function WaitlistForm() {
           </label>
           <input id="first_name" type="text" required value={firstName}
             onChange={(e) => setFirstName(e.target.value)} placeholder="Ada"
+            maxLength={100} autoComplete="given-name"
             className="h-11 w-full rounded-xl border border-mauve/28 bg-white/60 px-4 text-[14px] text-charcoal placeholder:text-charcoal/28 outline-none transition focus:border-rose/45 focus:ring-2 focus:ring-rose/18"
           />
         </div>
@@ -164,6 +234,7 @@ export function WaitlistForm() {
           </label>
           <input id="email" type="email" required value={email}
             onChange={(e) => setEmail(e.target.value)} placeholder="ada@example.com"
+            maxLength={254} autoComplete="email"
             className="h-11 w-full rounded-xl border border-mauve/28 bg-white/60 px-4 text-[14px] text-charcoal placeholder:text-charcoal/28 outline-none transition focus:border-rose/45 focus:ring-2 focus:ring-rose/18"
           />
         </div>
@@ -179,23 +250,21 @@ export function WaitlistForm() {
         <textarea id="motivation" rows={2} value={motivation}
           onChange={(e) => setMotivation(e.target.value)}
           placeholder="Optional — but we actually read every single response."
+          maxLength={1000}
           className="w-full resize-none rounded-xl border border-mauve/28 bg-white/60 px-4 py-3 text-[14px] text-charcoal placeholder:text-charcoal/28 outline-none transition focus:border-rose/45 focus:ring-2 focus:ring-rose/18"
         />
       </div>
 
-      <ShimmerButton type="submit" disabled={isSubmitting}
-        className="h-14 w-full rounded-2xl border-none disabled:opacity-60"
-        shimmerColor="#ffffff"
-        shimmerSize="0.1em"
-        background="linear-gradient(145deg, #d9778a, #c08497)"
+      <button
+        type="submit"
+        disabled={isSubmitting}
+        className="cta-pill h-14 w-full text-[15px] font-medium tracking-wide disabled:opacity-60"
       >
-        <span className="relative z-10 text-white tracking-wide font-medium">
-          {isSubmitting ? "Saving your spot…" : "I'm Ready — Claim My Founding Spot"}
-        </span>
-      </ShimmerButton>
+        {isSubmitting ? "Saving your spot…" : "I'm Ready — Claim My Founding Spot"}
+      </button>
 
       {error ? (
-        <p className="text-[12px] text-red-500">{error}</p>
+        <p role="alert" className="text-[12px] text-red-500">{error}</p>
       ) : (
         <div className="flex flex-col gap-1 text-[11px] text-charcoal/38">
           <p>We will never sell your information. Ever.</p>
