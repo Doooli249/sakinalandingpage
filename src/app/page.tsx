@@ -688,7 +688,7 @@ export default function HomePage() {
         {/* Champagne lamp-light radial glow top right */}
         <div className="pointer-events-none absolute -right-[20%] -top-[10%] w-[80%] h-[80%] rounded-full bg-[radial-gradient(circle_at_center,rgba(212,180,131,0.15),transparent_60%)] blur-3xl" />
 
-        <div className="mx-auto max-w-6xl relative z-10 grid md:grid-cols-[1fr_0.4fr] gap-16 lg:gap-24 items-start">
+        <div className="mx-auto max-w-3xl relative z-10">
           <motion.div {...fadeUp(0)}>
             <hr className="champagne-rule mb-14 w-16" />
 
@@ -706,17 +706,12 @@ export default function HomePage() {
               ))}
             </div>
 
-            <motion.p {...fadeUp(0.25)} className="mt-14 font-signature text-[2rem] text-charcoal/80">
-              — Adil, Co-Founder
-            </motion.p>
-          </motion.div>
-
-          {/* Right column: logo + gentle visual anchor */}
-          <motion.div {...fadeUp(0.15)} className="hidden md:flex flex-col items-center justify-start pt-2 gap-10">
-            <div className="opacity-40 grayscale">
-              <SakinaLogo size={64} />
-            </div>
-            <div className="w-px h-32 bg-gradient-to-b from-charcoal/20 to-transparent" />
+            <motion.div {...fadeUp(0.2)} className="mt-14 flex items-center justify-between">
+              <p className="font-signature text-[2rem] text-charcoal/80">— Adil, Co-Founder</p>
+              <div className="opacity-40 grayscale">
+                <SakinaLogo size={52} />
+              </div>
+            </motion.div>
           </motion.div>
         </div>
       </section>
