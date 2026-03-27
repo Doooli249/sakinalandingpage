@@ -100,7 +100,7 @@ export function InteractivePersonas() {
                 "0 12px 40px rgba(217,119,138,0.12), 0 0 0 1px rgba(217,119,138,0.10)",
               y: -3,
             }}
-            transition={{ type: "spring", stiffness: 260, damping: 22 }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           >
             {/* Rose accent line at top — grows on hover */}
             <div className="absolute top-0 left-8 right-8 h-[2px] rounded-full bg-gradient-to-r from-rose/20 via-rose/10 to-transparent overflow-hidden">
@@ -130,7 +130,7 @@ export function InteractivePersonas() {
                 href="#waitlist"
                 className="inline-flex items-center gap-2 text-[13px] font-semibold text-rose hover:text-rose/80 transition-colors"
               >
-                This is me — join the waitlist
+                <span>This is me — join the waitlist<span className="sr-only"> as a {persona.label} user</span></span>
                 <svg
                   width="16"
                   height="16"

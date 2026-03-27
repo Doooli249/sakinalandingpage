@@ -13,7 +13,7 @@ export const SakinaButton = React.forwardRef<HTMLButtonElement, SakinaButtonProp
   ({ className, children, variant = "light", href, animateBackground = true, ...props }, ref) => {
     
     // Base layout mimicking ButtonWithIconDemo
-    const baseClasses = "relative font-medium rounded-full h-12 p-1 ps-6 pe-14 group transition-all duration-500 hover:ps-14 hover:pe-6 w-fit overflow-hidden cursor-pointer inline-flex items-center justify-center outline-none";
+    const baseClasses = "relative font-medium rounded-full h-12 p-1 ps-6 pe-14 group transition-all duration-500 hover:ps-14 hover:pe-6 w-fit overflow-hidden cursor-pointer inline-flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose/80 focus-visible:ring-offset-2 focus-visible:ring-offset-background";
     
     // Brand specific pill styling relying on existing globals.css gradients
     const lightClasses = "cta-pill border-rose/30 text-white"; 

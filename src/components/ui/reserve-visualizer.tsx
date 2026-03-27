@@ -34,14 +34,15 @@ export function ReserveVisualizer() {
 
       {/* ── Deposit control ── */}
       <div className="text-center">
-        <p className="text-[11px] font-medium uppercase tracking-[0.24em] text-charcoal/40 mb-3">
+        <label htmlFor="deposit" className="text-[11px] font-medium uppercase tracking-[0.24em] text-charcoal/40 mb-3 block cursor-pointer">
           Your deposit
-        </p>
+        </label>
         <p className="font-headline text-[clamp(3.2rem,9vw,5.5rem)] font-light leading-none text-charcoal tabular-nums">
           ${deposit.toLocaleString()}
         </p>
         <div className="mt-7 flex flex-col items-center gap-2">
           <input
+            id="deposit"
             type="range"
             min="1000"
             max="50000"

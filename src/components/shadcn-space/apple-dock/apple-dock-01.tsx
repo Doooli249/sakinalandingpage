@@ -128,15 +128,15 @@ const AppleDockIcon = ({
     return val - bounds.x - bounds.width / 2;
   });
 
-  const targetSize = disableMagnification ? size : magnification;
+  const targetScale = disableMagnification ? 1 : magnification / size;
 
-  const sizeTransform = useTransform(
+  const scaleTransform = useTransform(
     distanceCalc,
     [-distance, 0, distance],
-    [size, targetSize, size],
+    [1, targetScale, 1],
   );
 
-  const scaleSize = useSpring(sizeTransform, {
+  const scale = useSpring(scaleTransform, {
     mass: 0.1,
     stiffness: 150,
     damping: 12,
@@ -145,7 +145,7 @@ const AppleDockIcon = ({
   return (
     <motion.div
       ref={ref}
-      style={{ width: scaleSize, height: scaleSize, padding }}
+      style={{ width: size, height: size, padding, scale }}
       className={cn(
         "flex aspect-square cursor-pointer items-center justify-center rounded-full",
         disableMagnification && "hover:bg-muted-foreground transition-colors",
@@ -172,36 +172,36 @@ export function SakinaDock() {
   const dockIcons: IconData[] = [
     {
       IconComponent: Home,
-      bgColor: "bg-[#1c1c1c]/5 hover:bg-[#1c1c1c]/10",
-      textColor: "text-[#1c1c1c]/70 hover:text-[#1c1c1c]",
+      bgColor: "bg-charcoal/5 hover:bg-charcoal/10",
+      textColor: "text-charcoal/70 hover:text-charcoal",
       label: "Home",
       href: "#hero",
     },
     {
       IconComponent: AlertTriangle,
-      bgColor: "bg-[#d9778a]/10 hover:bg-[#d9778a]/20",
-      textColor: "text-[#d9778a]/80 hover:text-[#d9778a]",
+      bgColor: "bg-rose/10 hover:bg-rose/20",
+      textColor: "text-rose/80 hover:text-rose",
       label: "The Problem",
       href: "#problem",
     },
     {
       IconComponent: Shield,
-      bgColor: "bg-[#d4b483]/15 hover:bg-[#d4b483]/25",
-      textColor: "text-[#c2985b]/90 hover:text-[#c2985b]",
+      bgColor: "bg-champagne/15 hover:bg-champagne/25",
+      textColor: "text-champagne/90 hover:text-champagne",
       label: "Solution",
       href: "#solution",
     },
     {
       IconComponent: Users,
-      bgColor: "bg-[#c08497]/15 hover:bg-[#c08497]/25",
-      textColor: "text-[#a36277]/90 hover:text-[#a36277]",
+      bgColor: "bg-mauve/15 hover:bg-mauve/25",
+      textColor: "text-mauve/90 hover:text-mauve",
       label: "Personas",
       href: "#personas",
     },
     {
       IconComponent: Ticket,
-      bgColor: "bg-[#d9778a]/15 hover:bg-[#d9778a]/25",
-      textColor: "text-[#d9778a]",
+      bgColor: "bg-rose/15 hover:bg-rose/25",
+      textColor: "text-rose",
       label: "Waitlist",
       href: "#waitlist",
     },
@@ -210,7 +210,7 @@ export function SakinaDock() {
   return (
     <div className="fixed top-2 left-1/2 -translate-x-1/2 z-[100]">
       <div className="relative">
-        <AppleDock iconMagnification={54} iconDistance={100} className="rounded-full bg-white/40 shadow-sm border-white/20">
+        <AppleDock iconSize={44} iconMagnification={54} iconDistance={100} className="rounded-full bg-white/40 shadow-sm border-white/20">
           {dockIcons.map(({ IconComponent, bgColor, textColor, label, href }) => (
             <a href={href} key={label} className="outline-none" aria-label={label} title={label}>
               <AppleDockIcon

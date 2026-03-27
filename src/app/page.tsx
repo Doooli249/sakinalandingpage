@@ -467,7 +467,7 @@ export default function HomePage() {
               >
                 <p className="font-headline text-[10px] tracking-[0.3em] text-rose uppercase">{item.num}</p>
                 <h3 className="mt-3 font-headline text-lg md:text-xl font-light text-cream">{item.title}</h3>
-                <p className="mt-3 text-[13px] md:text-[14px] leading-[1.8] text-cream/55">{item.body}</p>
+                <p className="mt-3 text-[13px] md:text-[14px] leading-[1.8] text-cream/75">{item.body}</p>
               </motion.article>
             ))}
           </div>
