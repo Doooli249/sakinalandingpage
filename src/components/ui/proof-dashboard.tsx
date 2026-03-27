@@ -3,18 +3,14 @@
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 
+import Image from "next/image";
+
 // Inline Sakina wordmark — avoids importing the logo component
 function InlineLogo({ size = 20 }: { size?: number }) {
-  const path = "M 50 43 C 68 35, 68 15, 50 2 C 32 15, 32 35, 50 43 Z";
   return (
-    <svg viewBox="0 0 100 100" width={size} height={size} aria-hidden="true">
-      {[0, 1, 2, 3, 4, 5].map((i) => (
-        <g key={i} style={{ transformOrigin: "50px 50px", transform: `rotate(${i * 60}deg)` }}>
-          <path d={path} fill="#D9778A" />
-        </g>
-      ))}
-      <circle cx="50" cy="50" r="6.5" fill="#FAF6F2" />
-    </svg>
+    <div style={{ width: size, height: size }} className="relative flex-shrink-0">
+      <Image src="/assets/sakina-logo.png" alt="" fill className="object-contain scale-[2.2]" />
+    </div>
   );
 }
 

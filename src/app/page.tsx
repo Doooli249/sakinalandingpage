@@ -475,7 +475,7 @@ export default function HomePage() {
           <motion.div {...fadeUp(0.4)} className="mt-16 flex justify-center">
              <div className="relative w-full max-w-sm aspect-square md:aspect-[4/3] rounded-2xl overflow-hidden border border-cream/10">
                 {/* To view the image attached in chat, save it to public/assets/money-jar.jpg */}
-                <Image src="/assets/money-jar.jpg" alt="A glass jar full of money — asking where it goes next" fill sizes="(max-width: 768px) 90vw, 384px" className="object-cover opacity-80 mix-blend-luminosity hover:mix-blend-normal transition-all duration-700" />
+                <Image src="/assets/gloved-hands.jpg" alt="Money exchange handled exclusively through surgical gloves — a metaphor for sterile, distanced banking" fill sizes="(max-width: 768px) 90vw, 384px" className="object-cover opacity-80 mix-blend-luminosity hover:mix-blend-normal transition-all duration-700" />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#111] to-transparent pointer-events-none" />
              </div>
           </motion.div>
@@ -531,43 +531,94 @@ export default function HomePage() {
               ))}
             </div>
 
-            <motion.div {...fadeUp(0.2)} className="grid gap-4">
-              <div className="warm-frame rounded-2xl p-2 overflow-hidden">
-                <Image src="/assets/bank-photo-gabby-k.jpg" alt="Person tapping their Visa card at a payment terminal"
-                  width={1200} height={760} loading="lazy" sizes="(max-width: 768px) 100vw, 45vw"
-                  className="h-[180px] md:h-[200px] w-full rounded-xl object-cover transition-transform duration-700 hover:scale-[1.03]" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="warm-frame rounded-2xl p-2 overflow-hidden">
-                  <Image src="/assets/pink-money-1.jpg" alt="Dollar bills representing deposits that stay safe"
-                    width={900} height={1200} loading="lazy" sizes="(max-width: 768px) 50vw, 22vw"
-                    className="h-[160px] md:h-[200px] w-full rounded-xl object-cover transition-transform duration-700 hover:scale-[1.03]" />
-                </div>
-                <div className="warm-frame rounded-2xl p-2 overflow-hidden">
-                  <Image src="/assets/bank-pink-photo.jpg" alt="Debit card and phone on a pink surface"
-                    width={900} height={1200} loading="lazy" sizes="(max-width: 768px) 50vw, 22vw"
-                    className="h-[160px] md:h-[200px] w-full rounded-xl object-cover transition-transform duration-700 hover:scale-[1.03]" />
-                </div>
-              </div>
-
-              {/* Compact 1:1 trust badge */}
-              <motion.div {...fadeUp(0.3)}
-                className="section-surface flex items-center gap-5 rounded-2xl px-5 py-5 md:px-6"
+            {/* Architectural Magazine Moodboard Layout for Solution Section (Desktop/Tablet) */}
+            <motion.div {...fadeUp(0.2)} className="relative w-full h-[380px] md:h-[480px] mb-8 md:mb-0 hidden sm:block">
+              
+              {/* Image 1: Main Feature (Flower) */}
+              <motion.div 
+                className="absolute top-0 right-0 w-[82%] warm-frame rounded-2xl p-2 z-10 shadow-lg transition-all duration-500 hover:z-50 hover:shadow-2xl"
+                whileHover={{ scale: 1.03, y: -5, rotate: 1 }}
+                initial={{ rotate: 2 }}
+                animate={{ rotate: 2 }}
               >
-                <p className="stat-display text-[clamp(2.2rem,5vw,3.2rem)] text-charcoal flex-shrink-0">1:1</p>
-                <div className="border-l border-mauve/20 pl-5 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="pulse-dot flex-shrink-0" aria-hidden="true" />
-                    <p className="text-[10px] uppercase tracking-[0.18em] text-charcoal/50 font-medium truncate">
-                      Reserve ratio · verified monthly
-                    </p>
-                  </div>
-                  <p className="text-[13px] text-charcoal/55 leading-relaxed">
-                    Every dollar deposited = every dollar safeguarded. Independent audit. Public dashboard.
-                  </p>
+                <div className="rounded-xl overflow-hidden bg-charcoal">
+                  <Image src="/assets/flower.jpg" alt="Sleek abstract pink blooming peony texture"
+                    width={1000} height={760} loading="lazy" sizes="(max-width: 768px) 100vw, 45vw"
+                    className="h-[180px] md:h-[230px] w-full object-cover opacity-90 transition-opacity duration-300 hover:opacity-100" />
+                </div>
+              </motion.div>
+              
+              {/* Image 2: Mid Offset Left (Jelly) */}
+              <motion.div 
+                className="absolute top-[160px] md:top-[180px] left-0 w-[58%] warm-frame rounded-2xl p-2 z-20 shadow-[0_20px_40px_rgba(28,28,28,0.12)] transition-all duration-500 hover:z-50 hover:shadow-3xl"
+                whileHover={{ scale: 1.05, y: -5, rotate: 0 }}
+                initial={{ rotate: -3 }}
+                animate={{ rotate: -3 }}
+              >
+                <div className="rounded-xl overflow-hidden bg-charcoal">
+                  <Image src="/assets/jelly-money.jpg" alt="Hand reaching into a pool of dense red jelly extracting hard currency"
+                    width={800} height={1000} loading="lazy" sizes="30vw"
+                    className="h-[150px] md:h-[220px] w-full object-cover opacity-95 transition-opacity duration-300 hover:opacity-100" />
+                </div>
+              </motion.div>
+
+              {/* Image 3: Far Offset Right (Holding Cash) */}
+              <motion.div 
+                className="absolute top-[210px] md:top-[260px] right-[4%] w-[60%] warm-frame rounded-2xl p-2 z-30 shadow-[-10px_25px_50px_rgba(28,28,28,0.15)] transition-all duration-500 hover:z-50 hover:shadow-3xl"
+                whileHover={{ scale: 1.05, y: -5, rotate: 0 }}
+                initial={{ rotate: 2 }}
+                animate={{ rotate: 2 }}
+              >
+                <div className="rounded-xl overflow-hidden bg-charcoal">
+                  <Image src="/assets/holding-cash.jpg" alt="Founder figure confidently holding out a fan of crisp bills"
+                    width={800} height={1000} loading="lazy" sizes="30vw"
+                    className="h-[150px] md:h-[190px] w-full object-cover opacity-95 transition-opacity duration-300 hover:opacity-100" />
                 </div>
               </motion.div>
             </motion.div>
+
+            {/* Mobile Fallback - Standard Layout */}
+            <motion.div {...fadeUp(0.2)} className="grid gap-4 sm:hidden">
+              <div className="warm-frame rounded-2xl p-2 overflow-hidden">
+                <Image src="/assets/flower.jpg" alt="Sleek abstract pink blooming peony texture"
+                  width={1200} height={760} loading="lazy" sizes="100vw"
+                  className="h-[180px] w-full rounded-xl object-cover transition-transform duration-700 hover:scale-[1.03]" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="warm-frame rounded-2xl p-2 overflow-hidden">
+                  <Image src="/assets/jelly-money.jpg" alt="Hand reaching into dense red jelly"
+                    width={900} height={1200} loading="lazy" sizes="50vw"
+                    className="h-[140px] w-full rounded-xl object-cover transition-transform duration-700 hover:scale-[1.03]" />
+                </div>
+                <div className="warm-frame rounded-2xl p-2 overflow-hidden">
+                  <Image src="/assets/holding-cash.jpg" alt="Founder figure holding crisp bills"
+                    width={900} height={1200} loading="lazy" sizes="50vw"
+                    className="h-[140px] w-full rounded-xl object-cover transition-transform duration-700 hover:scale-[1.03]" />
+                </div>
+              </div>
+            </motion.div>
+
+            <div className="mt-8 md:mt-4 w-full relative z-50">
+              {/* Compact 1:1 trust badge */}
+              <motion.div {...fadeUp(0.3)}
+                className="section-surface flex items-center justify-between gap-5 rounded-2xl px-5 py-5 md:px-6 shadow-sm border border-charcoal/5"
+              >
+                <div className="flex items-center gap-5">
+                  <p className="stat-display text-4xl lg:text-5xl text-charcoal flex-shrink-0 leading-none pb-1">1:1</p>
+                  <div className="border-l border-charcoal/10 pl-5 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="pulse-dot flex-shrink-0" aria-hidden="true" />
+                      <p className="text-[10px] uppercase tracking-[0.18em] text-charcoal/50 font-medium truncate">
+                        Reserve ratio · verified monthly
+                      </p>
+                    </div>
+                    <p className="text-[12px] md:text-[13px] text-charcoal/60 leading-relaxed md:whitespace-nowrap">
+                      Every dollar deposited = every dollar safeguarded.
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
           </div>
         </div>
       </section>
@@ -691,17 +742,56 @@ export default function HomePage() {
               </div>
             </motion.div>
 
-            <motion.div {...fadeUp(0.15)} className="hidden md:grid gap-5">
-              <div className="warm-frame rounded-2xl p-2 overflow-hidden">
-                <Image src="/assets/pink-money-2.jpg" alt="Wallet and cash representing financial independence"
-                  width={1200} height={760} loading="lazy" sizes="45vw"
-                  className="h-[260px] w-full rounded-xl object-cover transition-transform duration-700 hover:scale-[1.03]" />
-              </div>
-              <div className="warm-frame rounded-2xl p-2 overflow-hidden">
-                <Image src="/assets/bank-photo-gabby-k.jpg" alt="Confidently using a payment card at checkout"
-                  width={1200} height={760} loading="lazy" sizes="45vw"
-                  className="h-[240px] w-full rounded-xl object-cover transition-transform duration-700 hover:scale-[1.03]" />
-              </div>
+            {/* Architectural Magazine Moodboard Layout */}
+            <motion.div {...fadeUp(0.15)} className="hidden md:block relative w-full min-h-[600px] perspective-1000">
+              
+              {/* Image 1: Top Right Anchor (Cards) */}
+              <motion.div 
+                className="absolute top-2 right-0 w-[72%] warm-frame rounded-2xl p-2 z-10 shadow-2xl transition-all duration-500 hover:z-50"
+                whileHover={{ scale: 1.03, y: -5 }}
+              >
+                <div className="rounded-xl overflow-hidden bg-charcoal">
+                  <Image src="/assets/custom-3.jpg" alt="Minimalist design elements"
+                    width={900} height={1200} loading="lazy" sizes="40vw"
+                    className="h-[240px] w-full object-cover opacity-90 transition-opacity duration-300 hover:opacity-100" />
+                </div>
+              </motion.div>
+              
+              {/* Image 2: Mid-Left Floating (Ping Pong) */}
+              <motion.div 
+                className="absolute top-[170px] left-0 w-[55%] warm-frame rounded-2xl p-2 z-20 shadow-[-10px_20px_40px_rgba(28,28,28,0.12)] transition-all duration-500 hover:z-50 -rotate-3"
+                whileHover={{ scale: 1.05, rotate: -1, y: -5 }}
+              >
+                <div className="rounded-xl overflow-hidden bg-charcoal">
+                  <Image src="/assets/custom-2.jpg" alt="Conceptual lighting in dark space"
+                    width={1200} height={800} loading="lazy" sizes="30vw"
+                    className="h-[180px] w-full object-cover opacity-90 transition-opacity duration-300 hover:opacity-100" />
+                </div>
+              </motion.div>
+
+              {/* Image 3: Mid-Right Stepped (Money Bag) */}
+              <motion.div 
+                className="absolute top-[260px] right-[4%] w-[58%] warm-frame rounded-2xl p-2 z-30 shadow-[10px_25px_50px_rgba(28,28,28,0.15)] transition-all duration-500 hover:z-50 rotate-2"
+                whileHover={{ scale: 1.05, rotate: 0, y: -8 }}
+              >
+                <div className="rounded-xl overflow-hidden bg-charcoal">
+                  <Image src="/assets/bag.png" alt="Editorial depiction of safeguarded funds"
+                    width={800} height={800} loading="lazy" sizes="30vw"
+                    className="h-[210px] w-full object-cover opacity-90 transition-opacity duration-300 hover:opacity-100" />
+                </div>
+              </motion.div>
+
+              {/* Image 4: Bottom Left Focus (Piggy Bank) */}
+              <motion.div 
+                className="absolute top-[410px] left-[10%] w-[68%] warm-frame rounded-2xl p-2 z-40 shadow-[0_30px_60px_rgba(28,28,28,0.18)] transition-all duration-500 hover:z-50 -rotate-1"
+                whileHover={{ scale: 1.04, rotate: 0, y: -5 }}
+              >
+                <div className="rounded-xl overflow-hidden bg-charcoal">
+                  <Image src="/assets/piggy.png" alt="Aesthetic Piggy Bank in spotlight"
+                    width={800} height={600} loading="lazy" sizes="40vw"
+                    className="h-[230px] w-full object-cover opacity-95 transition-opacity duration-300 hover:opacity-100" />
+                </div>
+              </motion.div>
             </motion.div>
           </div>
         </div>
