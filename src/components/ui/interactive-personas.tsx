@@ -69,21 +69,29 @@ const cardVariants = {
   }),
 };
 
+const getGridPosition = (index: number) => {
+  switch (index) {
+    case 0: return "md:col-span-7 lg:col-span-6 lg:p-10"; // Faith - Anchored left
+    case 1: return "md:col-span-5 lg:col-span-5 lg:col-start-8 md:mt-16 lg:mt-24"; // Climate - Offset far right & down
+    case 2: return "md:col-span-6 lg:col-span-4 lg:col-start-2 max-md:mt-4 md:-mt-8 lg:-mt-16 z-10"; // Justice - Pulled up into negative space
+    case 3: return "md:col-span-6 lg:col-span-5 lg:col-start-7 max-md:mt-4 md:mt-20 lg:mt-8"; // Custody - Stacked right
+    case 4: return "md:col-span-12 lg:col-span-8 lg:col-start-3 mt-8 md:mt-16"; // Everyone - Grand centered finale
+    default: return "md:col-span-12";
+  }
+};
+
 export function InteractivePersonas() {
   const shouldReduce = useReducedMotion();
 
   return (
-    <div className="grid gap-5 md:grid-cols-2">
+    <div className="grid gap-5 md:grid-cols-12 md:gap-8">
       {personas.map((persona, i) => {
-        const isLast = i === personas.length - 1;
         const tilt = shouldReduce ? 0 : cardTilts[i] ?? 0;
 
         return (
           <motion.article
             key={persona.id}
-            className={`group relative rounded-2xl bg-white p-7 md:p-9 flex flex-col ${
-              isLast ? "md:col-span-2 md:max-w-2xl md:mx-auto" : ""
-            }`}
+            className={`group relative rounded-2xl bg-white p-7 md:p-9 flex flex-col ${getGridPosition(i)}`}
             style={{
               boxShadow:
                 "0 2px 12px rgba(28,28,28,0.05), 0 0 0 1px rgba(28,28,28,0.04)",

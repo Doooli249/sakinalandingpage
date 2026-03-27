@@ -472,7 +472,7 @@ export default function HomePage() {
             ))}
           </div>
 
-          <motion.div {...fadeUp(0.4)} className="mt-16 flex justify-center">
+          <motion.div {...fadeUp(0.4)} className="mt-28 md:mt-40 flex justify-center">
              <div className="relative w-full max-w-sm aspect-square md:aspect-[4/3] rounded-2xl overflow-hidden border border-cream/10">
                 {/* To view the image attached in chat, save it to public/assets/money-jar.jpg */}
                 <Image src="/assets/gloved-hands.jpg" alt="Money exchange handled exclusively through surgical gloves — a metaphor for sterile, distanced banking" fill sizes="(max-width: 768px) 90vw, 384px" className="object-cover opacity-80 mix-blend-luminosity hover:mix-blend-normal transition-all duration-700" />
@@ -532,51 +532,53 @@ export default function HomePage() {
             </div>
 
             {/* Architectural Magazine Moodboard Layout for Solution Section (Desktop/Tablet) */}
-            <motion.div {...fadeUp(0.2)} className="relative w-full h-[380px] md:h-[480px] mb-8 md:mb-0 hidden sm:block">
+            <motion.div {...fadeUp(0.2)} className="relative w-full min-h-[500px] md:min-h-[660px] mb-8 md:mb-0 hidden sm:block perspective-1000">
               
-              {/* Image 1: Main Feature (Flower) */}
+              {/* Right Column: Largest Image (Flower) */}
               <motion.div 
-                className="absolute top-0 right-0 w-[82%] warm-frame rounded-2xl p-2 z-10 shadow-lg transition-all duration-500 hover:z-50 hover:shadow-2xl"
-                whileHover={{ scale: 1.03, y: -5, rotate: 1 }}
-                initial={{ rotate: 2 }}
-                animate={{ rotate: 2 }}
+                className="absolute top-[20px] md:top-[10px] right-0 w-[58%] warm-frame rounded-2xl p-2 z-10 shadow-2xl transition-all duration-500 hover:z-50 hover:shadow-3xl"
+                whileHover={{ scale: 1.03, y: -5, rotate: 0 }}
+                initial={{ rotate: 1 }}
+                animate={{ rotate: 1 }}
               >
                 <div className="rounded-xl overflow-hidden bg-charcoal">
                   <Image src="/assets/flower.jpg" alt="Sleek abstract pink blooming peony texture"
-                    width={1000} height={760} loading="lazy" sizes="(max-width: 768px) 100vw, 45vw"
-                    className="h-[180px] md:h-[230px] w-full object-cover opacity-90 transition-opacity duration-300 hover:opacity-100" />
+                    width={1000} height={1200} loading="lazy" sizes="(max-width: 768px) 100vw, 45vw"
+                    className="h-[360px] md:h-[620px] w-full object-cover opacity-90 transition-opacity duration-300 hover:opacity-100" />
                 </div>
               </motion.div>
               
-              {/* Image 2: Mid Offset Left (Jelly) */}
+              {/* Top Left: Medium Image (Jelly Money) */}
               <motion.div 
-                className="absolute top-[160px] md:top-[180px] left-0 w-[58%] warm-frame rounded-2xl p-2 z-20 shadow-[0_20px_40px_rgba(28,28,28,0.12)] transition-all duration-500 hover:z-50 hover:shadow-3xl"
-                whileHover={{ scale: 1.05, y: -5, rotate: 0 }}
-                initial={{ rotate: -3 }}
-                animate={{ rotate: -3 }}
+                className="absolute top-0 left-0 w-[50%] warm-frame rounded-2xl p-2 z-20 shadow-[0_20px_40px_rgba(28,28,28,0.12)] transition-all duration-500 hover:z-50 hover:shadow-3xl"
+                whileHover={{ scale: 1.04, y: -5, rotate: 0 }}
+                initial={{ rotate: -2 }}
+                animate={{ rotate: -2 }}
               >
                 <div className="rounded-xl overflow-hidden bg-charcoal">
                   <Image src="/assets/jelly-money.jpg" alt="Hand reaching into a pool of dense red jelly extracting hard currency"
                     width={800} height={1000} loading="lazy" sizes="30vw"
-                    className="h-[150px] md:h-[220px] w-full object-cover opacity-95 transition-opacity duration-300 hover:opacity-100" />
+                    className="h-[240px] md:h-[320px] w-full object-cover opacity-95 transition-opacity duration-300 hover:opacity-100" />
                 </div>
               </motion.div>
 
-              {/* Image 3: Far Offset Right (Holding Cash) */}
+              {/* Bottom Left: Smallest Image (Holding Cash) */}
               <motion.div 
-                className="absolute top-[210px] md:top-[260px] right-[4%] w-[60%] warm-frame rounded-2xl p-2 z-30 shadow-[-10px_25px_50px_rgba(28,28,28,0.15)] transition-all duration-500 hover:z-50 hover:shadow-3xl"
+                className="absolute top-[260px] md:top-[360px] left-[12%] w-[45%] warm-frame rounded-2xl p-2 z-30 shadow-[-10px_25px_50px_rgba(28,28,28,0.15)] transition-all duration-500 hover:z-50 hover:shadow-3xl"
                 whileHover={{ scale: 1.05, y: -5, rotate: 0 }}
-                initial={{ rotate: 2 }}
-                animate={{ rotate: 2 }}
+                initial={{ rotate: 3 }}
+                animate={{ rotate: 3 }}
               >
                 <div className="rounded-xl overflow-hidden bg-charcoal">
                   <Image src="/assets/holding-cash.jpg" alt="Founder figure confidently holding out a fan of crisp bills"
                     width={800} height={1000} loading="lazy" sizes="30vw"
-                    className="h-[150px] md:h-[190px] w-full object-cover opacity-95 transition-opacity duration-300 hover:opacity-100" />
+                    className="h-[180px] md:h-[280px] w-full object-cover opacity-95 transition-opacity duration-300 hover:opacity-100" />
                 </div>
               </motion.div>
             </motion.div>
 
+            {/* Mobile Fallback - Standard Layout */}
+            {/* Mobile Fallback - Standard Layout */}
             {/* Mobile Fallback - Standard Layout */}
             <motion.div {...fadeUp(0.2)} className="grid gap-4 sm:hidden">
               <div className="warm-frame rounded-2xl p-2 overflow-hidden">
@@ -654,7 +656,7 @@ export default function HomePage() {
       </section>
 
       {/* ── Personas — editorial, not card grid ──────────────────────────── */}
-      <section id="personas" className="bg-[#fdf9f6] px-6 py-20 md:py-28">
+      <section id="personas" className="bg-[#fdf9f6] px-6 pt-32 pb-20 md:pt-48 md:pb-32">
         <div className="mx-auto max-w-5xl">
           <motion.div {...fadeUp(0)} className="max-w-3xl mb-10 md:mb-14">
             <p className="font-headline text-[clamp(1.5rem,3.5vw,2.8rem)] font-light italic leading-snug text-charcoal/70">
@@ -682,15 +684,15 @@ export default function HomePage() {
       </section>
 
       {/* ── Founder note ─────────────────────────────────────────────────── */}
-      <section id="founder" className="px-6 py-20 md:py-32 relative overflow-hidden bg-[#FBF7F3]">
+      <section id="founder" className="px-6 py-24 md:py-40 relative overflow-hidden bg-[#FBF7F3]">
         {/* Champagne lamp-light radial glow top right */}
         <div className="pointer-events-none absolute -right-[20%] -top-[10%] w-[80%] h-[80%] rounded-full bg-[radial-gradient(circle_at_center,rgba(212,180,131,0.15),transparent_60%)] blur-3xl" />
 
-        <div className="mx-auto max-w-3xl relative z-10">
+        <div className="mx-auto max-w-6xl relative z-10 grid md:grid-cols-[1fr_0.4fr] gap-16 lg:gap-24 items-start">
           <motion.div {...fadeUp(0)}>
-            <hr className="champagne-rule mb-12" />
+            <hr className="champagne-rule mb-14 w-16" />
 
-            <div className="space-y-7 md:space-y-8 font-headline text-[22px] sm:text-[24px] md:text-[28px] leading-[1.6] font-light text-charcoal">
+            <div className="space-y-8 md:space-y-10 font-headline text-[22px] sm:text-[24px] md:text-[28px] leading-[1.65] font-light text-charcoal">
               {founderParagraphs.map((para, i) => (
                 <motion.p
                   key={i}
@@ -704,15 +706,17 @@ export default function HomePage() {
               ))}
             </div>
 
-            <motion.div 
-               {...fadeUp(0.2)}
-               className="mt-16 flex items-center justify-between"
-            >
-               <p className="font-signature text-[2rem] text-charcoal">— Adil, Co-Founder</p>
-               <div className="opacity-70 grayscale">
-                 <SakinaLogo size={48} />
-               </div>
-            </motion.div>
+            <motion.p {...fadeUp(0.25)} className="mt-14 font-signature text-[2rem] text-charcoal/80">
+              — Adil, Co-Founder
+            </motion.p>
+          </motion.div>
+
+          {/* Right column: logo + gentle visual anchor */}
+          <motion.div {...fadeUp(0.15)} className="hidden md:flex flex-col items-center justify-start pt-2 gap-10">
+            <div className="opacity-40 grayscale">
+              <SakinaLogo size={64} />
+            </div>
+            <div className="w-px h-32 bg-gradient-to-b from-charcoal/20 to-transparent" />
           </motion.div>
         </div>
       </section>
