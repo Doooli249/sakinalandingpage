@@ -10,6 +10,9 @@ import { SakinaLogo } from "@/components/sakina-logo";
 import { MagneticCard } from "@/components/ui/magnetic-card";
 import { LiveLendingCounter } from "@/components/ui/live-lending-counter";
 import { InteractivePersonas } from "@/components/ui/interactive-personas";
+import { SakinaDock } from "@/components/shadcn-space/apple-dock/apple-dock-01";
+import { TypewriterText } from "@/components/ui/typewriter-text";
+import { SakinaButton } from "@/components/ui/sakina-button";
 
 // Lazy-load heavy below-fold components
 const ReserveVisualizer = dynamic(() => import("@/components/ui/reserve-visualizer").then(m => ({ default: m.ReserveVisualizer })), { ssr: false });
@@ -275,7 +278,7 @@ export default function HomePage() {
       {/* Skip to content — visible on keyboard focus */}
       <a href="#hero" className="skip-link">Skip to content</a>
 
-      <StickyNav />
+      <SakinaDock />
       <PetalProgress />
 
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
@@ -308,9 +311,9 @@ export default function HomePage() {
                 </p>
               </div>
             </div>
-            <a href="#waitlist" className="cta-pill px-5 py-2 text-sm">
+            <SakinaButton href="#waitlist" className="text-sm">
               Reserve founding access
-            </a>
+            </SakinaButton>
           </header>
 
           <div className="grid gap-10 md:grid-cols-[1.1fr_0.9fr] md:items-start md:gap-14">
@@ -329,34 +332,22 @@ export default function HomePage() {
                 US Checking Account · Visa Debit Card · Full-Reserve Banking
               </motion.p>
 
-              {/* Mixed-weight headline — stagger per line */}
+              {/* Mixed-weight headline — typewriter effect */}
               <motion.h1
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.01 }}
-                className="font-headline text-[clamp(2.8rem,6.5vw,6.4rem)] leading-[1.02] text-charcoal"
+                className="font-headline text-[clamp(2.8rem,6.5vw,6.4rem)] leading-[1.02] text-charcoal md:min-h-[2em]"
               >
-                <motion.span
-                  className="block font-light"
-                  initial={{ opacity: 0, y: 28, clipPath: "inset(0 0 100% 0)" }}
-                  whileInView={{ opacity: 1, y: 0, clipPath: "inset(0 0 0% 0)" }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] as const, delay: 0.15 }}
-                >
-                  Stop funding what you{" "}
-                  <em className="italic text-rose/80">oppose.</em>
-                </motion.span>
-                <motion.span
-                  className="block font-light"
-                  initial={{ opacity: 0, y: 28, clipPath: "inset(0 0 100% 0)" }}
-                  whileInView={{ opacity: 1, y: 0, clipPath: "inset(0 0 0% 0)" }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] as const, delay: 0.3 }}
-                >
-                  Keep your money{" "}
-                  <em className="italic text-charcoal/60">yours.</em>
-                </motion.span>
+                <div className="block font-light whitespace-pre-wrap">
+                  <TypewriterText text="Stop funding what you " delay={0.2} speed={0.04} />
+                  <TypewriterText text="oppose." delay={1.08} speed={0.04} className="italic text-rose/80" />
+                </div>
+                <div className="block font-light whitespace-pre-wrap md:-mt-1">
+                  <TypewriterText text="Keep your money " delay={1.86} speed={0.04} />
+                  <TypewriterText text="yours." delay={2.5} speed={0.04} className="italic text-charcoal/60" showCursor={true} cursorClassName="bg-charcoal/60" />
+                </div>
               </motion.h1>
 
               <motion.p {...fadeUp(0.4)}
@@ -502,9 +493,9 @@ export default function HomePage() {
               Sakina is the choice.
             </motion.p>
             <div className="mt-8 flex justify-center">
-              <a href="#waitlist" className="cta-pill-dark inline-flex px-7 py-3 text-sm">
+              <SakinaButton href="#waitlist" variant="dark" className="text-sm">
                 Reserve your founding spot
-              </a>
+              </SakinaButton>
             </div>
           </motion.div>
         </div>
@@ -529,13 +520,13 @@ export default function HomePage() {
             </p>
           </motion.div>
 
-          <div className="mt-14 grid gap-8 md:grid-cols-[1.1fr_0.9fr] md:gap-12">
-            <div className="space-y-8">
+          <div className="mt-16 md:mt-20 grid gap-12 md:grid-cols-[1.1fr_0.9fr] lg:gap-20">
+            <div className="space-y-12 md:space-y-16">
               {features.map((f, idx) => (
-                <motion.article key={f.title} {...fadeUp(idx * 0.08 + 0.1)} className="editorial-card group">
+                <motion.article key={f.title} {...fadeUp(idx * 0.08 + 0.1)} className="editorial-card group max-w-md">
                   <p className="font-headline text-[10px] tracking-[0.3em] text-rose/70 uppercase transition-colors group-hover:text-rose">{f.num}</p>
-                  <h3 className="mt-1.5 font-headline text-lg md:text-xl font-medium text-charcoal">{f.title}</h3>
-                  <p className="mt-2 text-[13px] md:text-[14px] leading-[1.8] text-charcoal/60">{f.body}</p>
+                  <h3 className="mt-2 font-headline text-lg md:text-xl font-medium text-charcoal">{f.title}</h3>
+                  <p className="mt-3 text-[14px] md:text-[15px] leading-[1.8] text-charcoal/60">{f.body}</p>
                 </motion.article>
               ))}
             </div>
@@ -604,9 +595,9 @@ export default function HomePage() {
           </motion.div>
 
           <motion.div {...fadeUp(0.35)} className="mt-10 flex justify-center">
-            <a href="#waitlist" className="cta-pill inline-flex px-8 py-3.5 text-[15px]">
+            <SakinaButton href="#waitlist" className="text-[15px]">
               Claim my founding spot
-            </a>
+            </SakinaButton>
           </motion.div>
         </div>
       </section>
@@ -632,9 +623,9 @@ export default function HomePage() {
             <p className="font-headline text-[clamp(1.4rem,3vw,2rem)] font-light text-charcoal">
               If any of that sounded like you — you&apos;re not alone.
             </p>
-            <a href="#waitlist" className="cta-pill inline-flex px-7 py-3 text-sm">
+            <SakinaButton href="#waitlist" className="text-sm">
               Claim your spot on the waitlist
-            </a>
+            </SakinaButton>
           </motion.div>
         </div>
       </section>

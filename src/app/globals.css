@@ -142,8 +142,15 @@ body {
 .geo-pattern {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cpath d='M15 0 L45 0 L60 15 L60 45 L45 60 L15 60 L0 45 L0 15 Z' fill='none' stroke='%23C08497' stroke-width='0.7'/%3E%3Cpath d='M22 0 L38 0 L60 22 L60 38 L38 60 L22 60 L0 38 L0 22 Z' fill='none' stroke='%23C08497' stroke-width='0.3'/%3E%3C/svg%3E");
   background-repeat: repeat;
-  background-size: 60px 60px;
-  opacity: 0.055;
+  background-size: 90px 90px;
+  opacity: 0.07;
+}
+
+@media (min-width: 768px) {
+  .geo-pattern {
+    background-size: 60px 60px;
+    opacity: 0.055;
+  }
 }
 
 /* ── Stat display ────────────────────────────────────────────────────────── */
@@ -290,6 +297,26 @@ body {
 }
 
 /* ── Keyframes ───────────────────────────────────────────────────────────── */
+
+@keyframes warmPulse {
+  0% { box-shadow: 0 0 0 0 rgba(217, 119, 138, 0.45); }
+  70% { box-shadow: 0 0 0 12px rgba(217, 119, 138, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(217, 119, 138, 0); }
+}
+
+@keyframes darkPulse {
+  0% { box-shadow: 0 0 0 0 rgba(250, 246, 242, 0.4); }
+  70% { box-shadow: 0 0 0 12px rgba(250, 246, 242, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(250, 246, 242, 0); }
+}
+
+.animate-warm-pulse {
+  animation: warmPulse 3s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+.animate-dark-pulse {
+  animation: darkPulse 3s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
 
 @keyframes rosePulse {
   0%, 100% { box-shadow: 0 0 0 rgba(217, 119, 138, 0); }

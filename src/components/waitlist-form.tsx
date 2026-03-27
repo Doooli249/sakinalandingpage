@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { isValidEmail } from "@/lib/utils";
+import { SakinaButton } from "@/components/ui/sakina-button";
 
 // Animated checkmark — draws on mount
 function AnimatedCheck() {
@@ -176,26 +177,27 @@ export function WaitlistForm() {
           <p className="mt-1.5 text-[13px] leading-relaxed text-charcoal/55">
             Every person you refer moves you higher on the launch list and helps us build Sakina with the right community from day one.
           </p>
-          <button
-            onClick={handleShare}
-            className="cta-pill mt-4 inline-flex w-full items-center justify-center gap-2 px-6 py-3 text-[14px]"
-          >
-            {copied ? (
-              <>
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <path d="M2 7l3.5 3.5L12 3" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                Link copied
-              </>
-            ) : (
-              <>
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <path d="M9 1h4v4M13 1L7 7M6 3H2a1 1 0 00-1 1v8a1 1 0 001 1h8a1 1 0 001-1V9" stroke="white" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                Share Sakina with a friend
-              </>
-            )}
-          </button>
+            <SakinaButton
+              onClick={handleShare}
+              animateBackground={false}
+              className="mt-4 w-full px-6 py-3 text-[14px]"
+            >
+              {copied ? (
+                <>
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="mr-2">
+                    <path d="M2 7l3.5 3.5L12 3" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  Link copied
+                </>
+              ) : (
+                <>
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="mr-2">
+                    <path d="M9 1h4v4M13 1L7 7M6 3H2a1 1 0 00-1 1v8a1 1 0 001 1h8a1 1 0 001-1V9" stroke="white" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  Share Sakina with a friend
+                </>
+              )}
+            </SakinaButton>
         </div>
       </motion.div>
     );
@@ -255,13 +257,13 @@ export function WaitlistForm() {
         />
       </div>
 
-      <button
+      <SakinaButton
         type="submit"
         disabled={isSubmitting}
-        className="cta-pill h-14 w-full text-[15px] font-medium tracking-wide disabled:opacity-60"
+        className="h-14 w-full text-[15px] font-medium tracking-wide disabled:opacity-60 disabled:cursor-not-allowed"
       >
         {isSubmitting ? "Saving your spot…" : "I'm Ready — Claim My Founding Spot"}
-      </button>
+      </SakinaButton>
 
       {error ? (
         <p role="alert" className="text-[12px] text-red-500">{error}</p>
