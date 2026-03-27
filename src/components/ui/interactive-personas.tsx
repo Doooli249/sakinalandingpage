@@ -52,6 +52,10 @@ const personas: Persona[] = [
   },
 ];
 
+// Hand-picked micro-rotations — not random, not uniform. Each card has a
+// distinct resting angle like notes pinned to a board.
+const cardTilts = [-1.2, 0.8, -0.6, 1.1, -0.9];
+
 const cardVariants = {
   hidden: { opacity: 0, y: 32 },
   visible: (i: number) => ({
@@ -72,6 +76,7 @@ export function InteractivePersonas() {
     <div className="grid gap-5 md:grid-cols-2">
       {personas.map((persona, i) => {
         const isLast = i === personas.length - 1;
+        const tilt = shouldReduce ? 0 : cardTilts[i] ?? 0;
 
         return (
           <motion.article
@@ -82,6 +87,7 @@ export function InteractivePersonas() {
             style={{
               boxShadow:
                 "0 2px 12px rgba(28,28,28,0.05), 0 0 0 1px rgba(28,28,28,0.04)",
+              rotate: tilt,
             }}
             custom={i}
             initial={shouldReduce ? "visible" : "hidden"}
@@ -89,11 +95,12 @@ export function InteractivePersonas() {
             viewport={{ once: true, margin: "-60px" }}
             variants={cardVariants}
             whileHover={{
+              rotate: 0,
               boxShadow:
                 "0 12px 40px rgba(217,119,138,0.12), 0 0 0 1px rgba(217,119,138,0.10)",
-              y: -2,
+              y: -3,
             }}
-            transition={{ duration: 0.25 }}
+            transition={{ type: "spring", stiffness: 260, damping: 22 }}
           >
             {/* Rose accent line at top — grows on hover */}
             <div className="absolute top-0 left-8 right-8 h-[2px] rounded-full bg-gradient-to-r from-rose/20 via-rose/10 to-transparent overflow-hidden">

@@ -82,9 +82,10 @@ export function MagneticCard() {
            {/* Card physical texture — CSS noise instead of external image */}
            <div className="absolute inset-0 opacity-[0.025] pointer-events-none" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")", backgroundSize: "180px 180px" }} />
            
-           <div className="absolute inset-0 p-8 flex items-center justify-between">
+           {/* Card top row: chip + logo */}
+           <div className="absolute inset-0 p-8 flex items-start justify-between">
               {/* EMV Chip */}
-              <div className="w-14 h-[42px] rounded-lg border border-[#d4b483]/40 bg-gradient-to-br from-[#e8d5b5] to-[#c5a065] shadow-sm ml-2 relative overflow-hidden">
+              <div className="w-14 h-[42px] rounded-lg border border-[#d4b483]/40 bg-gradient-to-br from-[#e8d5b5] to-[#c5a065] shadow-sm ml-2 relative overflow-hidden mt-1">
                 {/* Chip lines */}
                 <div className="absolute inset-0 opacity-40">
                   <div className="absolute top-1/2 left-0 right-0 h-px bg-black/20" />
@@ -95,12 +96,30 @@ export function MagneticCard() {
               </div>
 
               {/* Logo Area */}
-              <div className="flex flex-col items-center gap-2 mr-4">
+              <div className="flex flex-col items-center gap-1.5 mr-4">
                  <div className="text-[#D9778A]">
-                   <SakinaLogo size={48} />
+                   <SakinaLogo size={40} />
                  </div>
-                 <span className="font-headline text-charcoal/80 tracking-[0.15em] text-[15px] font-medium uppercase mt-1">SAKINA</span>
+                 <span className="font-headline text-charcoal/70 tracking-[0.15em] text-[13px] font-medium uppercase">SAKINA</span>
               </div>
+           </div>
+
+           {/* Card bottom: number + expiry */}
+           <div className="absolute bottom-0 left-0 right-0 px-10 pb-7 flex flex-col gap-2.5">
+             {/* Masked card number */}
+             <p className="font-mono text-[clamp(13px,2.5vw,17px)] tracking-[0.22em] text-charcoal/50 select-none">
+               •••• •••• •••• 4242
+             </p>
+             <div className="flex items-end justify-between">
+               <div>
+                 <p className="text-[9px] uppercase tracking-[0.18em] text-charcoal/35 mb-0.5">Member Since</p>
+                 <p className="font-mono text-[12px] tracking-[0.12em] text-charcoal/55">2026</p>
+               </div>
+               <div className="text-right">
+                 <p className="text-[9px] uppercase tracking-[0.18em] text-charcoal/35 mb-0.5">Status</p>
+                 <p className="text-[11px] font-medium tracking-[0.12em] text-charcoal/60 uppercase">Founding Member</p>
+               </div>
+             </div>
            </div>
            
            {/* Specular highlight (glare) overlay */}

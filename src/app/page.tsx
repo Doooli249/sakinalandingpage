@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { motion, useScroll, useTransform, MotionValue, AnimatePresence } from "framer-motion";
+import { motion, useScroll, useTransform, useSpring, AnimatePresence } from "framer-motion";
 import { WaitlistForm } from "@/components/waitlist-form";
 import { HeroForm } from "@/components/hero-form";
 import { SakinaLogo } from "@/components/sakina-logo";
@@ -63,38 +63,15 @@ function StickyNav() {
   );
 }
 
-// ── Scroll-Linked Typing Text ───────────────────────────────────────────────
+// ── Founder paragraph — dignified staggered fade, no scroll-typing theater ──
 
-function AnimatedWord({ word, index, totalWords, scrollProgress }: { word: string; index: number; totalWords: number; scrollProgress: MotionValue<number> }) {
-  // Map scroll progress to this specific word's opacity
-  const start = index / totalWords;
-  const end = start + (1 / totalWords);
-  const opacity = useTransform(scrollProgress, [start, end], [0.2, 1]);
-  
-  return (
-    <motion.span style={{ opacity, display: "inline-block", marginRight: "0.25em" }}>
-      {word}
-    </motion.span>
-  );
-}
-
-function ScrollTypingText({ text, className = "" }: { text: string; className?: string }) {
-  const ref = useRef<HTMLParagraphElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start 85%", "start 45%"], // Animation completes as it reaches middle of screen
-  });
-
-  const words = text.split(" ");
-
-  return (
-    <p ref={ref} className={className} style={{ display: "inline-block", flexWrap: "wrap", gap: "0.25em" }}>
-      {words.map((word, i) => (
-         <AnimatedWord key={i} word={word} index={i} totalWords={words.length} scrollProgress={scrollYProgress} />
-      ))}
-    </p>
-  );
-}
+const founderParagraphs = [
+  "My name is Adil. I'm 24. I'm Sudanese. I'm Muslim. And I grew up watching my community navigate a financial system that wasn't built for them.",
+  "For years I watched people keep money in cash and informal networks — not because they were unsophisticated, but because every mainstream option came with a quiet ethical compromise their faith and conscience could not accept.",
+  "This is bigger than one community. It is the story of anyone who has ever deposited a paycheck and wondered: what is my bank actually doing with my money?",
+  "Sakina is the Arabic word for tranquility — the stillness that comes from knowing something precious is completely safe and undisturbed.",
+  "We are building from Colorado with everything we have. Not just a bank account — a promise backed by law and verified by evidence.",
+];
 
 // ── Bank ticker with keyboard pause ──────────────────────────────────────────
 
@@ -115,6 +92,8 @@ const TICKER_ITEMS = [
 
 function BankTicker() {
   const [paused, setPaused] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const isActuallyPaused = paused || hovered;
 
   return (
     <div className="border-t border-cream/8 pt-4">
@@ -127,9 +106,13 @@ function BankTicker() {
           {paused ? "▶ Resume" : "⏸ Pause"}
         </button>
       </div>
-      <div className="marquee-outer">
+      <div
+        className="marquee-outer"
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+      >
         <div
-          className={`marquee-track ${paused ? "marquee-paused" : ""}`}
+          className={`marquee-track ${isActuallyPaused ? "marquee-paused" : ""}`}
           aria-live="off"
           aria-hidden="true"
         >
@@ -211,7 +194,15 @@ const founderBenefits = [
 function FaqItem({ q, a, idx }: { q: string; a: string; idx: number }) {
   const [open, setOpen] = useState(false);
   return (
-    <motion.div {...fadeUp(idx * 0.07 + 0.1)} className="border-b border-mauve/18 last:border-b-0">
+    <motion.div
+      {...fadeUp(idx * 0.07 + 0.1)}
+      className="border-b border-mauve/18 last:border-b-0"
+      style={{
+        borderLeft: open ? "2px solid rgba(217,119,138,0.6)" : "2px solid transparent",
+        paddingLeft: open ? "1rem" : "0",
+        transition: "border-color 0.3s ease, padding-left 0.3s ease",
+      }}
+    >
       <button
         onClick={() => setOpen((o) => !o)}
         className="flex w-full cursor-pointer items-start justify-between gap-4 py-5 text-left text-[15px] font-medium text-charcoal"
@@ -219,7 +210,8 @@ function FaqItem({ q, a, idx }: { q: string; a: string; idx: number }) {
       >
         {q}
         <motion.span
-          className="mt-0.5 flex-shrink-0 text-xl leading-none text-rose/70"
+          className="mt-0.5 flex-shrink-0 text-xl leading-none transition-colors duration-200"
+          style={{ color: open ? "var(--sakina-rose)" : "rgba(217,119,138,0.7)" }}
           animate={{ rotate: open ? 45 : 0 }}
           transition={{ duration: 0.2 }}
           aria-hidden="true"
@@ -241,6 +233,26 @@ function FaqItem({ q, a, idx }: { q: string; a: string; idx: number }) {
         )}
       </AnimatePresence>
     </motion.div>
+  );
+}
+
+// ── Footer closing quote with subtle parallax ─────────────────────────────────
+
+function FooterQuote() {
+  const ref = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
+  const rawY = useTransform(scrollYProgress, [0, 1], [20, -20]);
+  const y = useSpring(rawY, { stiffness: 80, damping: 20 });
+
+  return (
+    <div ref={ref} className="mx-auto max-w-6xl overflow-hidden mb-8 md:mb-10">
+      <motion.p
+        style={{ y }}
+        className="font-headline text-center text-[clamp(1.1rem,3vw,1.9rem)] font-light italic text-charcoal/50"
+      >
+        &ldquo;Every dollar you deposit with Sakina is a dollar that stays yours.&rdquo;
+      </motion.p>
+    </div>
   );
 }
 
@@ -453,8 +465,14 @@ export default function HomePage() {
 
           <div className="mt-12 grid gap-5 sm:gap-6 md:grid-cols-3">
             {problemItems.map((item, idx) => (
-              <motion.article key={item.title} {...fadeUp(idx * 0.1 + 0.2)}
-                className="group rounded-2xl border border-cream/8 p-6 md:p-7 transition-all duration-300 hover:border-rose/25 hover:-translate-y-1.5 hover:shadow-[0_16px_40px_rgba(217,119,138,0.12)]"
+              <motion.article key={item.title}
+                initial={{ opacity: 0, y: 28, x: idx === 1 ? 0 : idx === 0 ? -10 : 10 }}
+                whileInView={{ opacity: 1, y: 0, x: 0 }}
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] as const, delay: idx * 0.1 + 0.2 }}
+                whileHover={{ y: -4, rotateX: 2, scale: 1.01 }}
+                style={{ transformPerspective: 800 }}
+                className="group rounded-2xl border border-cream/8 p-6 md:p-7 transition-colors duration-300 hover:border-rose/25 hover:shadow-[0_16px_40px_rgba(217,119,138,0.12)]"
               >
                 <p className="font-headline text-[10px] tracking-[0.3em] text-rose uppercase">{item.num}</p>
                 <h3 className="mt-3 font-headline text-lg md:text-xl font-light text-cream">{item.title}</h3>
@@ -630,22 +648,18 @@ export default function HomePage() {
           <motion.div {...fadeUp(0)}>
             <hr className="champagne-rule mb-12" />
 
-            <div className="space-y-7 md:space-y-8 font-signature text-[22px] sm:text-[24px] md:text-[28px] leading-[1.6] text-charcoal">
-              <ScrollTypingText 
-                text="My name is Adil. I'm 24. I'm Sudanese. I'm Muslim. And I grew up watching my community navigate a financial system that wasn't built for them." 
-              />
-              <ScrollTypingText 
-                text="For years I watched people keep money in cash and informal networks — not because they were unsophisticated, but because every mainstream option came with a quiet ethical compromise their faith and conscience could not accept." 
-              />
-              <ScrollTypingText 
-                text="This is bigger than one community. It is the story of anyone who has ever deposited a paycheck and wondered: what is my bank actually doing with my money?" 
-              />
-              <ScrollTypingText 
-                text="Sakina is the Arabic word for tranquility — the stillness that comes from knowing something precious is completely safe and undisturbed." 
-              />
-              <ScrollTypingText 
-                text="We are building from Colorado with everything we have. Not just a bank account — a promise backed by law and verified by evidence." 
-              />
+            <div className="space-y-7 md:space-y-8 font-headline text-[22px] sm:text-[24px] md:text-[28px] leading-[1.6] font-light text-charcoal">
+              {founderParagraphs.map((para, i) => (
+                <motion.p
+                  key={i}
+                  initial={{ opacity: 0, y: 12 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-40px" }}
+                  transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] as const, delay: i * 0.08 }}
+                >
+                  {para}
+                </motion.p>
+              ))}
             </div>
 
             <motion.div 
@@ -729,12 +743,8 @@ export default function HomePage() {
 
       {/* ── Footer ───────────────────────────────────────────────────────── */}
       <footer id="footer" className="border-t border-mauve/18 px-6 py-10 md:py-12">
+        <FooterQuote />
         <div className="mx-auto max-w-6xl">
-          <motion.p {...fadeUp(0)}
-            className="font-headline mb-8 md:mb-10 text-center text-[clamp(1.1rem,3vw,1.9rem)] font-light italic text-charcoal/50"
-          >
-            &ldquo;Every dollar you deposit with Sakina is a dollar that stays yours.&rdquo;
-          </motion.p>
           <hr className="champagne-rule mb-8 md:mb-10" />
 
           <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
