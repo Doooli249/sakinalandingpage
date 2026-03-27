@@ -99,12 +99,13 @@ function BankTicker() {
   const isActuallyPaused = paused || hovered;
 
   return (
-    <div className="border-t border-cream/8 pt-4">
-      <div className="mb-2 flex justify-end px-6">
+    <div className="border-t border-cream/10 pt-6 pb-2">
+      <div className="mb-3 flex items-center justify-between px-6">
+        <p className="text-[10px] uppercase tracking-[0.28em] text-rose/70 font-semibold">Where your deposits actually go</p>
         <button
           onClick={() => setPaused((p) => !p)}
           aria-label={paused ? "Resume ticker" : "Pause ticker"}
-          className="text-[10px] uppercase tracking-[0.22em] text-cream/30 transition-colors hover:text-cream/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cream/50 focus-visible:outline-offset-2 rounded"
+          className="text-[10px] uppercase tracking-[0.22em] text-cream/40 transition-colors hover:text-cream/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cream/50 focus-visible:outline-offset-2 rounded"
         >
           {paused ? "▶ Resume" : "⏸ Pause"}
         </button>
@@ -119,11 +120,16 @@ function BankTicker() {
           aria-live="off"
           aria-hidden="true"
         >
-          {TICKER_ITEMS.map((item, i) => (
-            <span key={i} className="mx-8 whitespace-nowrap text-[11px] font-light tracking-[0.16em] text-cream/35 uppercase">
-              {item}
-            </span>
-          ))}
+          {TICKER_ITEMS.map((item, i) => {
+            const [bank, ...rest] = item.split(" · ");
+            return (
+              <span key={i} className="mx-10 whitespace-nowrap inline-flex items-center gap-2.5">
+                <span className="text-[13px] font-semibold tracking-[0.08em] text-rose/90 uppercase">{bank}</span>
+                <span className="text-cream/20 text-[10px]">·</span>
+                <span className="text-[13px] font-light tracking-[0.06em] text-cream/65 uppercase">{rest.join(" · ")}</span>
+              </span>
+            );
+          })}
         </div>
       </div>
     </div>
